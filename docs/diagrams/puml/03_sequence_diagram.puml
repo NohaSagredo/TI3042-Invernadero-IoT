@@ -1,0 +1,89 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Helvetica", "Arial", sans-serif
+skinparam sequenceMessageAlign center
+skinparam roundCorner 4
+
+skinparam sequence {
+    ArrowColor #1E293B
+    LifeLineBorderColor #64748B
+    LifeLineBackgroundColor #F1F5F9
+    ParticipantBorderColor #334155
+    ParticipantBackgroundColor #FFFFFF
+    ParticipantFontSize 11
+    ParticipantFontStyle bold
+    BoxBackgroundColor #F8FAF9
+    BoxBorderColor #CBD5E1
+}
+
+autonumber "<b>[00]</b>"
+
+actor "Usuario (Operador/Admin)" as User
+participant "LoginScreen\n(Compose UI)" as UI
+participant "GreenhouseRepo\n(Capa Datos)" as Repo
+participant "PasswordHasher\n(Criptografía)" as Hasher
+participant "FailSafeLockout\n(Seguridad)" as Lockout
+database "SQLite Database\n(users / audit)" as DB
+participant "ESP32 Node\n(Wi-Fi HTTP)" as ESP32
+
+User -> UI: Ingresa credenciales (usuario, contraseña)
+activate UI
+
+UI -> Repo: authenticate(username, password)
+activate Repo
+
+Repo -> Lockout: isLockedOut()
+activate Lockout
+Lockout --> Repo: false (Sin bloqueo activo)
+deactivate Lockout
+
+Repo -> DB: SELECT * FROM users WHERE username = ?
+activate DB
+DB --> Repo: UserRecord (hashPBKDF2, saltHex, role)
+deactivate DB
+
+Repo -> Hasher: verifyPassword(pass, saltHex, storedHash)
+activate Hasher
+note over Hasher
+  Derivación de clave mediante
+  PBKDF2WithHmacSHA256 (10.000 iteraciones)
+  Comparación en tiempo constante (Anti-Timing)
+end note
+Hasher --> Repo: resultadoVerificacion (true / false)
+deactivate Hasher
+
+alt Contraseña Incorrecta (< 3 intentos)
+    Repo -> Lockout: registerFailedAttempt()
+    Repo -> DB: INSERT INTO audit_logs (LOGIN_FAILED)
+    Repo --> UI: AuthResult.Failure("Contraseña incorrecta", isLockedOut = false)
+    UI --> User: Muestra error y aviso de intentos restantes
+
+else Intento Fallido N° 3 (Disparo Fail-Safe)
+    Repo -> Lockout: registerFailedAttempt()
+    note over Lockout
+      Bloqueo de 180 segundos activado.
+      Marca de tiempo persistida en SharedPreferences.
+    end note
+    Repo -> DB: INSERT INTO audit_logs (LOCKOUT_ACTIVATED)
+    Repo --> UI: AuthResult.Failure("Acceso bloqueado 3 min", isLockedOut = true)
+    UI --> User: Inhabilita controles y activa temporizador regresivo reactivo
+
+else Contraseña Correcta (Éxito)
+    Repo -> Lockout: reset()
+    Repo -> DB: INSERT INTO audit_logs (LOGIN_SUCCESS)
+    Repo --> UI: AuthResult.Success(user, sessionToken)
+    deactivate Repo
+
+    UI -> UI: navController.navigate("dashboard")
+    deactivate UI
+
+    UI -> ESP32: GET http://192.168.4.1/api/telemetry
+    activate ESP32
+    ESP32 --> UI: JSON { temp: 24.2, hum: 63.5, soilRaw: 540, servo: 60, fan: 0 }
+    deactivate ESP32
+
+    UI --> User: Renderiza Dashboard condicional adaptado por Rol (RBAC)
+end
+
+@enduml

@@ -127,39 +127,47 @@ Para articular las funcionalidades del sistema con los diagramas de modelado, se
 
 ---
 
-= 5. Modelado UML del Sistema Ciberfísico
+= 5. Modelado UML con PlantUML y Trazabilidad
 
-== 5.1. Diagrama de Casos de Uso (UML Use Case)
-El diagrama ilustra la interacción de los tres actores humanos frente al límite del sistema móvil, reflejando el principio de mínimo privilegio:
+En estricta correspondencia con los requerimientos docentes y las Historias de Usuario (HU) e Historias del Sistema (HS), los diagramas arquitectónicos fueron modelados formalmente en lenguaje *PlantUML* y compilados a formato vectorial SVG de alta definición.
 
-#align(center)[
-  #image("/home/noha/Documentos/Aplicaciónes Móviles IoT/Eva 2/diagrams/use_case_diagram.svg", width: 92%)
-]
-_Figura 1: Diagrama de Casos de Uso UML — Roles RBAC frente a la Aplicación Móvil IoT._
-
-== 5.2. Diagrama de Clases (UML Class Architecture)
-La aplicación implementa una arquitectura en capas desacoplada (*Clean Architecture / MVVM*), donde la interfaz de usuario reactiva interactúa con la capa de datos y red mediante flujos de estado `StateFlow`:
+== 5.1. Diagrama de Casos de Uso (PlantUML Use Case)
+El diagrama ilustra la interacción de los tres actores humanos (*Operador Agrícola*, *Administrador* y *Auditor de Ciberseguridad*) frente al límite del sistema móvil, aplicando el principio de mínimo privilegio bajo el estándar *ISO 27400*:
 
 #align(center)[
-  #image("/home/noha/Documentos/Aplicaciónes Móviles IoT/Eva 2/diagrams/class_diagram.svg", width: 95%)
+  #image("/home/noha/Documentos/Aplicaciónes Móviles IoT/Eva 2/diagrams/01_use_case.svg", width: 95%)
 ]
-_Figura 2: Diagrama de Clases UML — Desacoplamiento entre Capa UI, Lógica IoT, Seguridad y SQLite._
+_Figura 1: Diagrama de Casos de Uso en PlantUML — Jerarquía RBAC frente al Sistema Móvil IoT._
 
-== 5.3. Diagrama de Secuencia (UML Sequence)
-Modela el flujo de autenticación obligatoria, la verificación criptográfica con PBKDF2, la activación de la regla Fail-Safe por exceso de intentos y la consulta REST inicial con el ESP32:
+#note(title: "Trazabilidad con Historias de Usuario")[
+  - *HU-01 (Autenticación Obligatoria):* Mapeada a `CU-01`, común para todos los actores.
+  - *HU-02 & HU-03 (Operación y Calibración):* `CU-03` y `CU-04` restringen las mutaciones a perfiles con roles autorizados.
+  - *HU-04 (Inspección Forense):* `CU-06` permite al Auditor certificar el histórico de 5 minutos y los eventos de seguridad.
+]
+
+== 5.2. Diagrama de Clases de la Arquitectura (PlantUML Class Architecture)
+La aplicación implementa el patrón arquitectónico *MVVM (Model-View-ViewModel)* desacoplado mediante el principio de responsabilidad única (*Clean Architecture*). Las vistas declarativas en *Jetpack Compose* consumen flujos reactivos inmutables (`StateFlow`), mientras que la persistencia y la seguridad se aíslan en repositorios dedicados:
 
 #align(center)[
-  #image("/home/noha/Documentos/Aplicaciónes Móviles IoT/Eva 2/diagrams/sequence_diagram.svg", width: 95%)
+  #image("/home/noha/Documentos/Aplicaciónes Móviles IoT/Eva 2/diagrams/02_class_diagram.svg", width: 98%)
 ]
-_Figura 3: Diagrama de Secuencia UML — Autenticación Segura, Detección de Fuerza Bruta y Telemetría Wi-Fi._
+_Figura 2: Diagrama de Clases en PlantUML — Desacoplamiento entre UI Compose, Borde IoT, Seguridad y SQLite._
 
-== 5.4. Diagrama de Estados del Sistema Ciberfísico (UML State Machine)
-Ilustra las transiciones operativas del lazo cerrado de climatización ejecutado concurrentemente en el microcontrolador ESP32 y reflejado en la aplicación:
+== 5.3. Diagrama de Secuencia (PlantUML Sequence)
+Modela la interacción temporal y el paso de mensajes asíncronos durante el proceso de autenticación obligatoria, la verificación matemática del hash PBKDF2, la defensa activa anti-fuerza bruta y la primera consulta de telemetría HTTP hacia el nodo ESP32:
 
 #align(center)[
-  #image("/home/noha/Documentos/Aplicaciónes Móviles IoT/Eva 2/diagrams/state_diagram.svg", width: 92%)
+  #image("/home/noha/Documentos/Aplicaciónes Móviles IoT/Eva 2/diagrams/03_sequence_diagram.svg", width: 98%)
 ]
-_Figura 4: Diagrama de Estados UML — Máquina de Estados de Climatización Agronómica y Fail-Safe._
+_Figura 3: Diagrama de Secuencia en PlantUML — Flujo de Login Seguro, Disparo Fail-Safe y Enlace REST Wi-Fi._
+
+== 5.4. Diagrama de Máquina de Estados del Invernadero (PlantUML State Machine)
+Modela el comportamiento dinámico del lazo cerrado de climatización ejecutado concurrentemente en el microcontrolador ESP32 y supervisado desde el dispositivo móvil, reflejando las transiciones climáticas y el resguardo de supervivencia:
+
+#align(center)[
+  #image("/home/noha/Documentos/Aplicaciónes Móviles IoT/Eva 2/diagrams/04_state_machine.svg", width: 92%)
+]
+_Figura 4: Diagrama de Estados en PlantUML — Lazo Cerrado de Climatización y Modo Fail-Safe de Borde._
 
 ---
 

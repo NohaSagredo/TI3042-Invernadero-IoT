@@ -1,0 +1,75 @@
+@startuml
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Helvetica", "Arial", sans-serif
+
+skinparam state {
+    BackgroundColor #F0FDF4
+    BorderColor #15803D
+    BorderThickness 1.5
+    FontColor #166534
+    FontSize 12
+    FontStyle bold
+    ArrowColor #334155
+    StartColor #0F172A
+    EndColor #0F172A
+}
+
+[*] --> ConfortBiologico : Inicialización / Carga de Perfil NVS
+
+state ConfortBiologico {
+    ConfortBiologico : Temperatura y Humedad en Rango Óptimo
+    ConfortBiologico : Compuerta Cenital a 45° (Posición Neutra)
+    ConfortBiologico : Extractor 12V MOSFET Apagado (PWM 0)
+}
+
+state VentilacionPasiva {
+    VentilacionPasiva : Exceso Térmico Moderado (T > T_max)
+    VentilacionPasiva : Compuerta Batiente Abierta al 100% (Servo 90°)
+    VentilacionPasiva : Extractor Apagado (Evacuación Natural)
+}
+
+state VentilacionForzada {
+    VentilacionForzada : Pico Térmico (T > T_max + 1°C) o Exceso Fúngico (H > H_max)
+    VentilacionForzada : Compuerta Batiente Abierta (Servo 90°)
+    VentilacionForzada : Extractor Activo a Máximo Régimen (PWM 220-255)
+}
+
+state FailSafeBorde #FEF2F2 {
+    FailSafeBorde : Interrupción Wi-Fi (> 15s) o Transductor NaN
+    FailSafeBorde : Regulación Autónoma en Borde (ESP32)
+    FailSafeBorde : Compuerta de Resguardo en 45°
+    FailSafeBorde : Pulsos Preventivos de Extractor (PWM 120)
+}
+
+state ManualOverride #FFFBEB {
+    ManualOverride : Intervención Directa de Administrador
+    ManualOverride : Lazo Cerrado de Control Pausado
+    ManualOverride : Ángulo y PWM Forzados por Telecomando
+}
+
+' Transiciones climáticas
+ConfortBiologico --> VentilacionPasiva : T > T_max
+VentilacionPasiva --> ConfortBiologico : T <= T_max
+
+VentilacionPasiva --> VentilacionForzada : T > T_max + 1.0°C\no H > H_max
+VentilacionForzada --> ConfortBiologico : T y H Normalizados
+
+ConfortBiologico --> VentilacionForzada : Ascenso Térmico Brusco
+
+' Transiciones Fail-Safe
+ConfortBiologico --> FailSafeBorde : Pérdida Heartbeat Wi-Fi\no Falla DHT22 (NaN)
+VentilacionPasiva --> FailSafeBorde : Falla de Enlace
+VentilacionForzada --> FailSafeBorde : Falla de Enlace
+
+FailSafeBorde --> ConfortBiologico : Restablecimiento de Enlace Wi-Fi\ny Telemetría Nominal
+
+' Transiciones Override
+ConfortBiologico --> ManualOverride : Comando Override Admin
+VentilacionPasiva --> ManualOverride : Comando Override Admin
+VentilacionForzada --> ManualOverride : Comando Override Admin
+
+ManualOverride --> ConfortBiologico : Orden "Reactivar Modo Auto"
+
+@enduml

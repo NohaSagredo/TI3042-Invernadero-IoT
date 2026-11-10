@@ -1,0 +1,82 @@
+@startuml
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam handwritten false
+skinparam shadowing false
+skinparam defaultFontName "Helvetica", "Arial", sans-serif
+skinparam defaultFontSize 12
+
+skinparam actor {
+    BackgroundColor #F8FAF9
+    BorderColor #1B5E20
+    FontColor #0F172A
+    FontSize 13
+}
+
+skinparam usecase {
+    BackgroundColor #F1F8F5
+    BorderColor #2E7D32
+    BorderThickness 1.5
+    FontColor #145A32
+    FontSize 11
+    ArrowColor #334155
+}
+
+skinparam package {
+    BackgroundColor #FAFCFA
+    BorderColor #94A3B8
+    BorderThickness 1.5
+    FontColor #1B5E20
+    FontStyle bold
+    FontSize 13
+}
+
+left to right direction
+
+actor "Operador Agrícola" as Operador
+actor "Administrador" as Admin
+actor "Auditor de Ciberseguridad" as Auditor
+
+package "Sistema Ciberfísico IoT: Invernadero Inteligente" {
+    usecase "CU-01: Autenticación Segura\n(PBKDF2 & Salt 128-bit)" as CU01
+    usecase "CU-02: Monitoreo Telemetría en Vivo\n(DHT22 & FC-28)" as CU02
+    usecase "CU-03: Conmutación de Rutinas de Cultivo\n(Tomate, Frutilla, Lechuga)" as CU03
+    usecase "CU-04: Calibración de Umbrales Críticos\n(Persistencia NVS ESP32)" as CU04
+    usecase "CU-05: Control Manual Override\n(Servo SG90 & Ventilador MOSFET)" as CU05
+    usecase "CU-06: Consulta Historial 5min\n& Bitácora Forense ISO 27400" as CU06
+    usecase "CU-07: Desbloqueo Administrativo\n& Configuración IP Wi-Fi" as CU07
+}
+
+' Relaciones Operador
+Operador --> CU01
+Operador --> CU02
+Operador --> CU03
+Operador --> CU06
+
+' Relaciones Administrador
+Admin --> CU01
+Admin --> CU02
+Admin --> CU03
+Admin --> CU04
+Admin --> CU05
+Admin --> CU06
+Admin --> CU07
+
+' Relaciones Auditor
+Auditor --> CU01
+Auditor --> CU02
+Auditor --> CU06
+
+note right of CU01
+  Defensa activa Fail-Safe:
+  Bloqueo progresivo de 180s
+  tras 3 intentos fallidos consecutivos.
+end note
+
+note bottom of CU04
+  Validación estricta de límites
+  fisiológicos (Sanity Bounds)
+  para impedir sabotaje térmico.
+end note
+
+@enduml

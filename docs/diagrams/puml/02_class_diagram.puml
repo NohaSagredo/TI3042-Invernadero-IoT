@@ -1,0 +1,165 @@
+@startuml
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Helvetica", "Arial", sans-serif
+skinparam classFontSize 11
+skinparam classAttributeFontSize 10
+skinparam classStereotypeFontSize 10
+
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #334155
+    BorderThickness 1.2
+    HeaderBackgroundColor #F8FAF9
+    ArrowColor #475569
+}
+
+package "Capas de Arquitectura Android (MVVM)" {
+
+    package "Capa UI (Jetpack Compose)" #F1F8F5 {
+        class DashboardScreen <<Composable>> {
+            + state: InvernaderoState
+            + currentUser: User
+            + iotManager: GreenhouseIotManager
+            + HeaderUsuarioRBAC()
+            + TarjetaSensor()
+            + TarjetaCompuertaServo()
+            + TarjetaVentiladorMosfet()
+        }
+
+        class ThresholdDialog <<Dialog>> {
+            + profile: PlantProfile
+            + onConfirm(updated: PlantProfile)
+        }
+
+        class ConfiguracionIpDialog <<Dialog>> {
+            + ipActual: String
+            + onTestPing(ip): Boolean
+            + onGuardar(nuevaIp)
+        }
+    }
+
+    package "Capa de Borde & IoT" #E0F2FE {
+        class GreenhouseIotManager <<Singleton>> {
+            - _state: MutableStateFlow<InvernaderoState>
+            - repository: GreenhouseRepository
+            + state: StateFlow<InvernaderoState>
+            + cambiarRutina(perfil, user)
+            + calibrarUmbrales(perfil, user)
+            + setManualVentana(angulo, user)
+            + setManualVentilador(pwm, user)
+            + reactivarModoAuto(user)
+            + actualizarIpEsp32(ip, user)
+            - consultarEsp32Real(ip): JSONObject
+            - enviarComandoPost(endpoint, params): Boolean
+        }
+    }
+
+    package "Capa de Ciberseguridad" #FEE2E2 {
+        class PasswordHasher <<Object>> {
+            + hashPassword(pass, salt): String
+            + verifyPassword(pass, salt, hash): Boolean
+            + generateSalt(): ByteArray
+            - constantTimeEquals(a, b): Boolean
+        }
+
+        class FailSafeLockoutManager <<Object>> {
+            - _failedAttempts: MutableStateFlow<Int>
+            - _lockoutUntil: MutableStateFlow<Long>
+            + isLockedOut(): Boolean
+            + getRemainingSeconds(): Int
+            + registerFailedAttempt(): Boolean
+            + reset()
+        }
+
+        class SessionManager <<Object>> {
+            - _currentUser: MutableStateFlow<User?>
+            - sessionToken: String?
+            - lastActivityTimestamp: Long
+            + isAuthenticated: Boolean
+            + login(user): String
+            + recordActivity()
+            + logout()
+            - iniciarWatchdogInactividad()
+        }
+    }
+
+    package "Capa de Datos y Persistencia" #FEF3C7 {
+        class GreenhouseRepository <<Repository>> {
+            - dbHelper: GreenhouseDbHelper
+            + authenticate(user, pass): AuthResult
+            + recordTelemetry(log: TelemetryLog): Long
+            + getRecentTelemetry(limit): List<TelemetryLog>
+            + updatePlantProfile(profile): Boolean
+            + recordAuditLog(type, details): Long
+            + getAuditLogs(limit): List<AuditLog>
+            + unlockUser(username, actor): Boolean
+        }
+
+        class GreenhouseDbHelper <<SQLiteOpenHelper>> {
+            + TABLE_USERS: String
+            + TABLE_PROFILES: String
+            + TABLE_TELEMETRY: String
+            + TABLE_AUDIT: String
+            + onCreate(db: SQLiteDatabase)
+            + onUpgrade(db, oldV, newV)
+            - precargarDatosIniciales(db)
+        }
+    }
+
+    package "Capa de Dominio & Modelos" #F8FAFC {
+        class User <<Data>> {
+            + id: Long
+            + username: String
+            + passwordHash: String
+            + saltHex: String
+            + role: Role
+            + failedAttempts: Int
+        }
+
+        enum Role {
+            ADMIN
+            OPERATOR
+            AUDITOR
+            + canEditThresholds(): Boolean
+            + canOverrideActuators(): Boolean
+            + canViewAuditLogs(): Boolean
+        }
+
+        class PlantProfile <<Data>> {
+            + id: String
+            + name: String
+            + tempMin: Float
+            + tempMax: Float
+            + humidityMin: Float
+            + humidityMax: Float
+            + soilRawMin: Int
+            + soilRawMax: Int
+        }
+
+        class InvernaderoState <<Data>> {
+            + temperatura: Float
+            + humedadAmbiente: Float
+            + humedadSueloRaw: Int
+            + anguloVentana: Int
+            + velocidadVentiladorPwm: Int
+            + estaConectado: Boolean
+            + modoFailSafeBorde: Boolean
+            + estaEnRangoTemperatura: Boolean
+        }
+    }
+}
+
+' Relaciones arquitectónicas
+DashboardScreen --> GreenhouseIotManager : observa StateFlow
+DashboardScreen ..> ThresholdDialog : invoca
+DashboardScreen ..> ConfiguracionIpDialog : invoca
+GreenhouseIotManager --> GreenhouseRepository : persiste telemetría
+GreenhouseIotManager --> InvernaderoState : emite
+GreenhouseRepository --> GreenhouseDbHelper : operaciones CRUD
+GreenhouseRepository ..> PasswordHasher : verifica hash
+GreenhouseRepository ..> FailSafeLockoutManager : consulta bloqueo
+GreenhouseRepository ..> SessionManager : establece sesión
+User --> Role : tipado
+@enduml
