@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 540" width="100%" height="100%" style="background-color: #ffffff; font-family: sans-serif;">
+  <defs>
+    <style>
+      .actor-box { fill: #f8fafc; stroke: #334155; stroke-width: 1.5; rx: 4; }
+      .actor-title { font-size: 11px; font-weight: bold; fill: #0f172a; text-anchor: middle; }
+      .lifeline { stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 4,4; }
+      .msg-line { stroke: #1e293b; stroke-width: 1.5; marker-end: url(#arrow); }
+      .ret-line { stroke: #0284c7; stroke-width: 1.5; stroke-dasharray: 4,4; marker-end: url(#arrow-blue); }
+      .err-line { stroke: #dc2626; stroke-width: 1.5; stroke-dasharray: 4,4; marker-end: url(#arrow-red); }
+      .msg-text { font-size: 10px; fill: #1e293b; }
+      .note-box { fill: #fffbeb; stroke: #f59e0b; stroke-width: 1; rx: 4; }
+      .note-text { font-size: 9.5px; fill: #92400e; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1e293b"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0284c7"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#dc2626"/>
+    </marker>
+  </defs>
+
+  <!-- Participantes -->
+  <g transform="translate(60, 20)">
+    <rect width="100" height="34" class="actor-box"/>
+    <text x="50" y="21" class="actor-title">Usuario / App</text>
+    <line x1="50" y1="34" x2="50" y2="500" class="lifeline"/>
+  </g>
+
+  <g transform="translate(240, 20)">
+    <rect width="110" height="34" class="actor-box"/>
+    <text x="55" y="21" class="actor-title">GreenhouseRepo</text>
+    <line x1="55" y1="34" x2="55" y2="500" class="lifeline"/>
+  </g>
+
+  <g transform="translate(430, 20)">
+    <rect width="110" height="34" class="actor-box"/>
+    <text x="55" y="21" class="actor-title">PasswordHasher</text>
+    <line x1="55" y1="34" x2="55" y2="500" class="lifeline"/>
+  </g>
+
+  <g transform="translate(610, 20)">
+    <rect width="110" height="34" class="actor-box"/>
+    <text x="55" y="21" class="actor-title">SQLite Database</text>
+    <line x1="55" y1="34" x2="55" y2="500" class="lifeline"/>
+  </g>
+
+  <g transform="translate(790, 20)">
+    <rect width="90" height="34" class="actor-box"/>
+    <text x="45" y="21" class="actor-title">ESP32 (Wi-Fi)</text>
+    <line x1="45" y1="34" x2="45" y2="500" class="lifeline"/>
+  </g>
+
+  <!-- Mensajes de Flujo -->
+  <!-- 1. Enviar credenciales -->
+  <line x1="110" y1="90" x2="290" y2="90" class="msg-line"/>
+  <text x="130" y="83" class="msg-text">1. authenticate("admin", "pass")</text>
+
+  <!-- 2. Consultar Usuario en DB -->
+  <line x1="295" y1="120" x2="660" y2="120" class="msg-line"/>
+  <text x="320" y="113" class="msg-text">2. queryUser("admin")</text>
+
+  <line x1="660" y1="145" x2="295" y2="145" class="ret-line"/>
+  <text x="360" y="140" class="msg-text">userEntity (saltHex, hashPBKDF2)</text>
+
+  <!-- 3. Validar Hash PBKDF2 -->
+  <line x1="295" y1="180" x2="480" y2="180" class="msg-line"/>
+  <text x="310" y="173" class="msg-text">3. verifyPassword(pass, salt, hash)</text>
+
+  <g transform="translate(360, 200)">
+    <rect width="250" height="34" class="note-box"/>
+    <text x="12" y="20" class="note-text">PBKDF2WithHmacSHA256 (10k rondas) en tiempo constante</text>
+  </g>
+
+  <line x1="480" y1="250" x2="295" y2="250" class="ret-line"/>
+  <text x="340" y="244" class="msg-text">hashMatches: Boolean</text>
+
+  <!-- 4. Si es incorrecto: Lockout check -->
+  <g transform="translate(140, 275)">
+    <rect width="530" height="70" fill="#fef2f2" stroke="#ef4444" stroke-width="1" rx="4"/>
+    <text x="15" y="20" font-size="10" font-weight="bold" fill="#b91c1c">[ALT: 3 Intentos Fallidos Consecutivos]</text>
+    <text x="15" y="38" font-size="9.5" fill="#7f1d1d">FailSafeLockoutManager activa bloqueo por 180 s y persiste en SharedPreferences</text>
+    <text x="15" y="55" font-size="9.5" fill="#7f1d1d">Registra evento LOCKOUT_ACTIVATED en audit_logs de SQLite</text>
+  </g>
+
+  <!-- 5. Si es correcto: Token & Sesión -->
+  <line x1="295" y1="375" x2="110" y2="375" class="ret-line"/>
+  <text x="130" y="368" class="msg-text">4. AuthResult.Success(user, token)</text>
+
+  <!-- 6. Despacho a Dashboard y Conexión ESP32 -->
+  <line x1="110" y1="415" x2="830" y2="415" class="msg-line"/>
+  <text x="300" y="408" class="msg-text">5. GET http://192.168.4.1/api/telemetry</text>
+
+  <line x1="830" y1="450" x2="110" y2="450" class="ret-line"/>
+  <text x="300" y="443" class="msg-text">6. JSON: { temp: 24.2, hum: 63.5, servo: 60, fan: 0 }</text>
+
+  <g transform="translate(230, 475)">
+    <rect width="520" height="30" fill="#f0fdf4" stroke="#22c55e" stroke-width="1" rx="4"/>
+    <text x="15" y="19" font-size="10" font-weight="bold" fill="#15803d">Dashboard cargado con vista filtrada por Rol (RBAC: Admin / Operador / Auditor)</text>
+  </g>
+</svg>

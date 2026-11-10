@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" width="100%" height="100%" style="background-color: #ffffff; font-family: sans-serif;">
+  <defs>
+    <style>
+      .title { font-size: 16px; font-weight: bold; fill: #1b5e20; }
+      .box { fill: #f8fafc; stroke: #94a3b8; stroke-width: 1.5; rx: 8; }
+      .actor-head { fill: #f1f5f9; stroke: #1e293b; stroke-width: 2; }
+      .actor-body { stroke: #1e293b; stroke-width: 2; stroke-linecap: round; }
+      .actor-text { font-size: 12px; font-weight: bold; fill: #0f172a; text-anchor: middle; }
+      .uc-ellipse { fill: #ffffff; stroke: #15803d; stroke-width: 1.8; rx: 110; ry: 24; }
+      .uc-text { font-size: 11px; font-weight: 600; fill: #166534; text-anchor: middle; }
+      .line { stroke: #64748b; stroke-width: 1.4; stroke-dasharray: 4,4; }
+      .line-solid { stroke: #475569; stroke-width: 1.5; }
+    </style>
+  </defs>
+
+  <!-- Contenedor del Sistema -->
+  <rect x="240" y="40" width="460" height="450" class="box" />
+  <text x="470" y="70" class="title" text-anchor="middle">Límite del Sistema: Aplicación Móvil Android IoT</text>
+
+  <!-- Actores Izquierda -->
+  <!-- Operador -->
+  <g transform="translate(110, 160)">
+    <circle cx="0" cy="-20" r="14" class="actor-head"/>
+    <line x1="0" y1="-6" x2="0" y2="24" class="actor-body"/>
+    <line x1="-18" y1="4" x2="18" y2="4" class="actor-body"/>
+    <line x1="0" y1="24" x2="-14" y2="48" class="actor-body"/>
+    <line x1="0" y1="24" x2="14" y2="48" class="actor-body"/>
+    <text x="0" y="65" class="actor-text">Operador Agrícola</text>
+  </g>
+
+  <!-- Administrador -->
+  <g transform="translate(110, 360)">
+    <circle cx="0" cy="-20" r="14" class="actor-head"/>
+    <line x1="0" y1="-6" x2="0" y2="24" class="actor-body"/>
+    <line x1="-18" y1="4" x2="18" y2="4" class="actor-body"/>
+    <line x1="0" y1="24" x2="-14" y2="48" class="actor-body"/>
+    <line x1="0" y1="24" x2="14" y2="48" class="actor-body"/>
+    <text x="0" y="65" class="actor-text">Administrador</text>
+  </g>
+
+  <!-- Actor Derecha: Auditor -->
+  <g transform="translate(800, 260)">
+    <circle cx="0" cy="-20" r="14" class="actor-head"/>
+    <line x1="0" y1="-6" x2="0" y2="24" class="actor-body"/>
+    <line x1="-18" y1="4" x2="18" y2="4" class="actor-body"/>
+    <line x1="0" y1="24" x2="-14" y2="48" class="actor-body"/>
+    <line x1="0" y1="24" x2="14" y2="48" class="actor-body"/>
+    <text x="0" y="65" class="actor-text">Auditor / Sistema</text>
+  </g>
+
+  <!-- Casos de Uso -->
+  <!-- CU1: Autenticación Obligatoria -->
+  <g transform="translate(470, 110)">
+    <ellipse cx="0" cy="0" rx="130" ry="22" class="uc-ellipse"/>
+    <text x="0" y="4" class="uc-text">CU-01: Autenticación y Verificación PBKDF2</text>
+  </g>
+
+  <!-- CU2: Monitoreo Telemetría -->
+  <g transform="translate(470, 175)">
+    <ellipse cx="0" cy="0" rx="130" ry="22" class="uc-ellipse"/>
+    <text x="0" y="4" class="uc-text">CU-02: Monitoreo Telemetría en Tiempo Real</text>
+  </g>
+
+  <!-- CU3: Conmutar Rutinas -->
+  <g transform="translate(470, 240)">
+    <ellipse cx="0" cy="0" rx="130" ry="22" class="uc-ellipse"/>
+    <text x="0" y="4" class="uc-text">CU-03: Conmutar Rutina de Cultivo</text>
+  </g>
+
+  <!-- CU4: Calibrar Umbrales -->
+  <g transform="translate(470, 305)">
+    <ellipse cx="0" cy="0" rx="130" ry="22" class="uc-ellipse"/>
+    <text x="0" y="4" class="uc-text">CU-04: Calibración Fina de Umbrales (NVS)</text>
+  </g>
+
+  <!-- CU5: Forzado Manual Actuadores -->
+  <g transform="translate(470, 370)">
+    <ellipse cx="0" cy="0" rx="130" ry="22" class="uc-ellipse"/>
+    <text x="0" y="4" class="uc-text">CU-05: Control Manual Override (Servo / Fan)</text>
+  </g>
+
+  <!-- CU6: Consulta Auditoría e Historial -->
+  <g transform="translate(470, 435)">
+    <ellipse cx="0" cy="0" rx="130" ry="22" class="uc-ellipse"/>
+    <text x="0" y="4" class="uc-text">CU-06: Consulta Histórico 5min &amp; Auditoría ISO</text>
+  </g>
+
+  <!-- Conexiones Operador -->
+  <line x1="150" y1="160" x2="340" y2="110" class="line-solid"/>
+  <line x1="150" y1="160" x2="340" y2="175" class="line-solid"/>
+  <line x1="150" y1="160" x2="340" y2="240" class="line-solid"/>
+  <line x1="150" y1="160" x2="340" y2="435" class="line-solid"/>
+
+  <!-- Conexiones Administrador -->
+  <line x1="150" y1="360" x2="340" y2="110" class="line-solid"/>
+  <line x1="150" y1="360" x2="340" y2="175" class="line-solid"/>
+  <line x1="150" y1="360" x2="340" y2="240" class="line-solid"/>
+  <line x1="150" y1="360" x2="340" y2="305" class="line-solid"/>
+  <line x1="150" y1="360" x2="340" y2="370" class="line-solid"/>
+  <line x1="150" y1="360" x2="340" y2="435" class="line-solid"/>
+
+  <!-- Conexiones Auditor -->
+  <line x1="760" y1="260" x2="600" y2="110" class="line-solid"/>
+  <line x1="760" y1="260" x2="600" y2="175" class="line-solid"/>
+  <line x1="760" y1="260" x2="600" y2="435" class="line-solid"/>
+
+</svg>

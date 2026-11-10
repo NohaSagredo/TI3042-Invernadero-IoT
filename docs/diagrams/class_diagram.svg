@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 580" width="100%" height="100%" style="background-color: #ffffff; font-family: sans-serif;">
+  <defs>
+    <style>
+      .class-box { fill: #ffffff; stroke: #334155; stroke-width: 1.5; rx: 4; }
+      .header-ui { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 1.5; }
+      .header-domain { fill: #e0f2fe; stroke: #0284c7; stroke-width: 1.5; }
+      .header-data { fill: #fef3c7; stroke: #d97706; stroke-width: 1.5; }
+      .header-sec { fill: #fee2e2; stroke: #dc2626; stroke-width: 1.5; }
+      .title { font-size: 12px; font-weight: bold; fill: #0f172a; text-anchor: middle; }
+      .member { font-size: 10px; font-family: monospace; fill: #1e293b; }
+      .rel-line { stroke: #475569; stroke-width: 1.5; fill: none; }
+      .arrow { fill: #475569; }
+    </style>
+  </defs>
+
+  <!-- 1. CAPA UI: DashboardScreen & ViewModel -->
+  <g transform="translate(40, 40)">
+    <rect width="260" height="150" class="class-box" />
+    <rect width="260" height="28" class="header-ui" rx="4" />
+    <text x="130" y="18" class="title">DashboardScreen (Jetpack Compose)</text>
+    <text x="10" y="48" class="member">+ state: InvernaderoState</text>
+    <text x="10" y="64" class="member">+ currentUser: User</text>
+    <text x="10" y="80" class="member">+ iotManager: GreenhouseIotManager</text>
+    <line x1="0" y1="92" x2="260" y2="92" stroke="#cbd5e1" stroke-width="1"/>
+    <text x="10" y="110" class="member">+ HeaderUsuarioRBAC()</text>
+    <text x="10" y="126" class="member">+ TarjetaSensor(dht22, fc28)</text>
+    <text x="10" y="142" class="member">+ TarjetaActuadores(servo, mosfet)</text>
+  </g>
+
+  <!-- 2. CAPA IOT: GreenhouseIotManager -->
+  <g transform="translate(360, 40)">
+    <rect width="270" height="170" class="class-box" />
+    <rect width="270" height="28" class="header-domain" rx="4" />
+    <text x="135" y="18" class="title">GreenhouseIotManager &lt;&lt;Singleton&gt;&gt;</text>
+    <text x="10" y="48" class="member">- _state: MutableStateFlow&lt;InvernaderoState&gt;</text>
+    <text x="10" y="64" class="member">- repository: GreenhouseRepository</text>
+    <text x="10" y="80" class="member">+ state: StateFlow&lt;InvernaderoState&gt;</text>
+    <line x1="0" y1="92" x2="270" y2="92" stroke="#cbd5e1" stroke-width="1"/>
+    <text x="10" y="110" class="member">+ cambiarRutina(perfil, user)</text>
+    <text x="10" y="126" class="member">+ calibrarUmbrales(perfil, user)</text>
+    <text x="10" y="142" class="member">+ setManualVentana(angulo, user)</text>
+    <text x="10" y="158" class="member">+ setManualVentilador(pwm, user)</text>
+  </g>
+
+  <!-- 3. CAPA SEGURIDAD: PasswordHasher & SessionManager -->
+  <g transform="translate(680, 40)">
+    <rect width="240" height="150" class="class-box" />
+    <rect width="240" height="28" class="header-sec" rx="4" />
+    <text x="120" y="18" class="title">SessionManager / Hasher</text>
+    <text x="10" y="48" class="member">- currentUser: MutableStateFlow&lt;User?&gt;</text>
+    <text x="10" y="64" class="member">- sessionToken: String?</text>
+    <text x="10" y="80" class="member">+ isAuthenticated: Boolean</text>
+    <line x1="0" y1="92" x2="240" y2="92" stroke="#cbd5e1" stroke-width="1"/>
+    <text x="10" y="110" class="member">+ hashPassword(pass, salt): String</text>
+    <text x="10" y="126" class="member">+ verifyPassword(pass, salt, hash)</text>
+    <text x="10" y="142" class="member">+ login(user), logout()</text>
+  </g>
+
+  <!-- 4. CAPA REPOSITORIO: GreenhouseRepository -->
+  <g transform="translate(360, 260)">
+    <rect width="270" height="150" class="class-box" />
+    <rect width="270" height="28" class="header-data" rx="4" />
+    <text x="135" y="18" class="title">GreenhouseRepository &lt;&lt;Repo&gt;&gt;</text>
+    <text x="10" y="48" class="member">- dbHelper: GreenhouseDbHelper</text>
+    <line x1="0" y1="60" x2="270" y2="60" stroke="#cbd5e1" stroke-width="1"/>
+    <text x="10" y="78" class="member">+ authenticate(user, pass): AuthResult</text>
+    <text x="10" y="94" class="member">+ recordTelemetry(log: TelemetryLog)</text>
+    <text x="10" y="110" class="member">+ getRecentTelemetry(limit): List</text>
+    <text x="10" y="126" class="member">+ updatePlantProfile(profile): Boolean</text>
+    <text x="10" y="142" class="member">+ recordAuditLog(event, details)</text>
+  </g>
+
+  <!-- 5. CAPA DATOS: GreenhouseDbHelper -->
+  <g transform="translate(360, 450)">
+    <rect width="270" height="100" class="class-box" />
+    <rect width="270" height="28" class="header-data" rx="4" />
+    <text x="135" y="18" class="title">GreenhouseDbHelper (SQLite)</text>
+    <text x="10" y="48" class="member">TABLES: users, plant_profiles,</text>
+    <text x="10" y="64" class="member">telemetry_logs, audit_logs</text>
+    <line x1="0" y1="72" x2="270" y2="72" stroke="#cbd5e1" stroke-width="1"/>
+    <text x="10" y="90" class="member">+ onCreate(db), onUpgrade(db)</text>
+  </g>
+
+  <!-- 6. MODELOS: InvernaderoState & User -->
+  <g transform="translate(40, 260)">
+    <rect width="260" height="130" class="class-box" />
+    <rect width="260" height="28" class="header-domain" rx="4" />
+    <text x="130" y="18" class="title">InvernaderoState &lt;&lt;Data&gt;&gt;</text>
+    <text x="10" y="48" class="member">+ temperatura: Float</text>
+    <text x="10" y="64" class="member">+ humedadAmbiente: Float</text>
+    <text x="10" y="80" class="member">+ humedadSueloRaw: Int</text>
+    <text x="10" y="96" class="member">+ anguloVentana: Int</text>
+    <text x="10" y="112" class="member">+ velocidadVentiladorPwm: Int</text>
+  </g>
+
+  <!-- 7. MODELOS: PlantProfile -->
+  <g transform="translate(680, 260)">
+    <rect width="240" height="130" class="class-box" />
+    <rect width="240" height="28" class="header-domain" rx="4" />
+    <text x="120" y="18" class="title">PlantProfile &lt;&lt;Data&gt;&gt;</text>
+    <text x="10" y="48" class="member">+ id: String ("TOMATE", ...)</text>
+    <text x="10" y="64" class="member">+ tempMin: Float, tempMax: Float</text>
+    <text x="10" y="80" class="member">+ humidityMin: Float, max: Float</text>
+    <text x="10" y="96" class="member">+ soilRawMin: Int, max: Int</text>
+    <text x="10" y="112" class="member">+ targetServoAngle, fanPwm</text>
+  </g>
+
+  <!-- Relaciones -->
+  <!-- UI a IoTManager -->
+  <line x1="300" y1="115" x2="360" y2="115" class="rel-line" />
+  <!-- IoTManager a Repository -->
+  <line x1="495" y1="210" x2="495" y2="260" class="rel-line" />
+  <!-- Repository a DbHelper -->
+  <line x1="495" y1="410" x2="495" y2="450" class="rel-line" />
+  <!-- Repository a SessionManager -->
+  <line x1="630" y1="310" x2="780" y2="190" class="rel-line" />
+  <!-- UI a State -->
+  <line x1="170" y1="190" x2="170" y2="260" class="rel-line" />
+</svg>
