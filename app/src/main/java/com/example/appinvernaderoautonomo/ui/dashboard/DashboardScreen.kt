@@ -81,6 +81,19 @@ fun DashboardScreen(
     modifier: Modifier = Modifier
 ) {
     var mostrarDialogoUmbrales by remember { mutableStateOf(false) }
+    var mostrarDialogoIp by remember { mutableStateOf(false) }
+
+    if (mostrarDialogoIp) {
+        ConfiguracionIpDialog(
+            ipActual = state.ipNodoEsp32,
+            onDismiss = { mostrarDialogoIp = false },
+            onGuardar = { nuevaIp ->
+                iotManager.actualizarIpEsp32(nuevaIp, currentUser)
+                mostrarDialogoIp = false
+            },
+            onTestPing = { ip -> iotManager.pingEsp32(ip) }
+        )
+    }
 
     if (mostrarDialogoUmbrales) {
         ThresholdDialog(
@@ -105,6 +118,8 @@ fun DashboardScreen(
         HeaderUsuarioRBAC(
             user = currentUser,
             estaConectado = state.estaConectado,
+            ipNodo = state.ipNodoEsp32,
+            onConfigurarIp = { mostrarDialogoIp = true },
             onSimularConexion = { iotManager.alternarSimulacionFalloConexion(currentUser) },
             onCerrarSesion = onCerrarSesion
         )
@@ -228,6 +243,8 @@ fun DashboardScreen(
 private fun HeaderUsuarioRBAC(
     user: User,
     estaConectado: Boolean,
+    ipNodo: String,
+    onConfigurarIp: () -> Unit,
     onSimularConexion: () -> Unit,
     onCerrarSesion: () -> Unit
 ) {
@@ -251,17 +268,49 @@ private fun HeaderUsuarioRBAC(
                         color = Color(0xFF1F2923)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = Color(user.role.badgeColorHex)
-                    ) {
-                        Text(
-                            text = user.role.displayTitle.uppercase(),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color(user.role.badgeColorHex)
+                        ) {
+                            Text(
+                                text = user.role.displayTitle.uppercase(),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Surface(
+                            onClick = onConfigurarIp,
+                            enabled = user.role == Role.ADMIN,
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color(0xFFECEFF1)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = ipNodo,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color(0xFF37474F)
+                                )
+                                if (user.role == Role.ADMIN) {
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Icon(
+                                        imageVector = Icons.Rounded.Tune,
+                                        contentDescription = "Editar IP",
+                                        tint = Color(0xFF546E7A),
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -468,7 +517,9 @@ private fun TarjetaSensor(
 
             Text(
                 text = valor,
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontFeatureSettings = "tnum"
+                ),
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF1F2923)
             )

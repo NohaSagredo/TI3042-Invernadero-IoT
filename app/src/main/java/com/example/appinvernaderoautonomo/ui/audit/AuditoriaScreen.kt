@@ -1,6 +1,7 @@
 package com.example.appinvernaderoautonomo.ui.audit
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -22,7 +23,6 @@ import androidx.compose.material.icons.rounded.LockClock
 import androidx.compose.material.icons.rounded.LockOpen
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Security
-import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Card
@@ -46,7 +46,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -55,6 +54,13 @@ import com.example.appinvernaderoautonomo.data.GreenhouseRepository
 import com.example.appinvernaderoautonomo.model.AuditEventType
 import com.example.appinvernaderoautonomo.model.AuditLog
 import kotlinx.coroutines.launch
+
+enum class FiltroAuditoria(val titulo: String) {
+    TODOS("Todos"),
+    SEGURIDAD("Seguridad & Login"),
+    RUTINAS("Rutinas"),
+    OVERRIDE("Overrides & Ajustes")
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,18 +71,41 @@ fun AuditoriaScreen(
 ) {
     var logs by remember { mutableStateOf<List<AuditLog>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+    var filtroSeleccionado by remember { mutableStateOf(FiltroAuditoria.TODOS) }
     val scope = rememberCoroutineScope()
 
     fun cargarLogs() {
         scope.launch {
             isLoading = true
-            logs = repository.getAuditLogs(50)
+            logs = repository.getAuditLogs(60)
             isLoading = false
         }
     }
 
     LaunchedEffect(Unit) {
         cargarLogs()
+    }
+
+    val logsFiltrados = remember(logs, filtroSeleccionado) {
+        when (filtroSeleccionado) {
+            FiltroAuditoria.TODOS -> logs
+            FiltroAuditoria.SEGURIDAD -> logs.filter {
+                it.eventType in listOf(
+                    AuditEventType.LOGIN_SUCCESS,
+                    AuditEventType.LOGIN_FAILED,
+                    AuditEventType.LOCKOUT_ACTIVATED,
+                    AuditEventType.SYSTEM_RESET
+                )
+            }
+            FiltroAuditoria.RUTINAS -> logs.filter { it.eventType == AuditEventType.ROUTINE_CHANGED }
+            FiltroAuditoria.OVERRIDE -> logs.filter {
+                it.eventType in listOf(
+                    AuditEventType.THRESHOLD_MODIFIED,
+                    AuditEventType.MANUAL_OVERRIDE,
+                    AuditEventType.FAILSAFE_TRIGGERED
+                )
+            }
+        }
     }
 
     Scaffold(
@@ -135,32 +164,64 @@ fun AuditoriaScreen(
         },
         modifier = modifier
     ) { innerPadding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFFF8FAF9))
                 .padding(innerPadding)
         ) {
-            if (isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Color(0xFF0277BD))
+            // Barra horizontal de chips de filtrado
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FiltroAuditoria.entries.forEach { filtro ->
+                    val seleccionado = filtro == filtroSeleccionado
+                    Surface(
+                        onClick = { filtroSeleccionado = filtro },
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (seleccionado) Color(0xFF0277BD) else Color(0xFFE1F5FE)
+                    ) {
+                        Text(
+                            text = filtro.titulo,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (seleccionado) Color.White else Color(0xFF0277BD),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        )
+                    }
                 }
-            } else if (logs.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = "No se registran eventos de auditoría.",
-                        color = Color(0xFF757575)
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    items(logs) { log ->
-                        TarjetaLogAuditoria(log)
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f)
+            ) {
+                if (isLoading) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = Color(0xFF0277BD))
+                    }
+                } else if (logsFiltrados.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "No se registran eventos con este filtro.",
+                            color = Color(0xFF757575)
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(logsFiltrados) { log ->
+                            TarjetaLogAuditoria(log)
+                        }
                     }
                 }
             }

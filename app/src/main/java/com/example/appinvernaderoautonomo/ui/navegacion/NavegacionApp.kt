@@ -27,7 +27,17 @@ fun NavegacionApp(
     val iotManager = GreenhouseIotManager.getInstance(context)
 
     val currentUser by SessionManager.currentUser.collectAsState()
+    val isSessionExpired by SessionManager.isSessionExpired.collectAsState()
     val iotState by iotManager.state.collectAsState()
+
+    // Observador activo de expiración de sesión por inactividad prolongada (15 min)
+    androidx.compose.runtime.LaunchedEffect(isSessionExpired) {
+        if (isSessionExpired) {
+            navController.navigate("login") {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 
     NavHost(
         navController = navController,

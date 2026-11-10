@@ -44,6 +44,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -80,7 +81,10 @@ fun LoginScreen(
     var username by remember { mutableStateOf("admin") }
     var password by remember { mutableStateOf("admin123") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val isExpired by com.example.appinvernaderoautonomo.security.SessionManager.isSessionExpired.collectAsState()
+    var errorMessage by remember {
+        mutableStateOf<String?>(if (isExpired) "Sesión cerrada por inactividad de 15 minutos." else null)
+    }
     var isLoading by remember { mutableStateOf(false) }
 
     var isLockedOut by remember { mutableStateOf(FailSafeLockoutManager.isLockedOut()) }

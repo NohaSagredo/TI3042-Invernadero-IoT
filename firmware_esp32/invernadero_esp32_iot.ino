@@ -271,4 +271,16 @@ void configurarRutasServidor() {
     }
     server.send(200, "application/json", "{\"status\":\"ok\"}");
   });
+
+  // Endpoint 4: Calibración Fina de Umbrales Biológicos (Persistido en NVS)
+  server.on("/api/calibrate", HTTP_POST, []() {
+    if (server.hasArg("t_min")) perfilActivo.tempMin = server.arg("t_min").toFloat();
+    if (server.hasArg("t_max")) perfilActivo.tempMax = server.arg("t_max").toFloat();
+    if (server.hasArg("h_min")) perfilActivo.humMin = server.arg("h_min").toFloat();
+    if (server.hasArg("h_max")) perfilActivo.humMax = server.arg("h_max").toFloat();
+    if (server.hasArg("s_min")) perfilActivo.sueloMinRaw = server.arg("s_min").toInt();
+    if (server.hasArg("s_max")) perfilActivo.sueloMaxRaw = server.arg("s_max").toInt();
+    guardarPerfilNVS();
+    server.send(200, "application/json", "{\"status\":\"ok\",\"mensaje\":\"Umbrales sincronizados en NVS\"}");
+  });
 }

@@ -1,12 +1,18 @@
 package com.example.appinvernaderoautonomo
 
+import com.example.appinvernaderoautonomo.model.EstadoSuelo
+import com.example.appinvernaderoautonomo.model.InvernaderoState
 import com.example.appinvernaderoautonomo.model.PlantProfile
 import com.example.appinvernaderoautonomo.model.Role
+import com.example.appinvernaderoautonomo.model.User
 import com.example.appinvernaderoautonomo.security.FailSafeLockoutManager
 import com.example.appinvernaderoautonomo.security.PasswordHasher
+import com.example.appinvernaderoautonomo.security.SessionManager
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -16,6 +22,7 @@ class SecurityAndFailSafeTest {
     @Before
     fun setUp() {
         FailSafeLockoutManager.reset()
+        SessionManager.logout()
     }
 
     @Test
@@ -105,5 +112,54 @@ class SecurityAndFailSafeTest {
             assertTrue("El ángulo del servo no debe sobrepasar 120 grados físicos.", perfil.targetServoAngle in 0..120)
             assertTrue("La velocidad del ventilador debe estar en rango PWM 8-bit (0-255).", perfil.targetFanPwm in 0..255)
         }
+    }
+
+    @Test
+    fun testSessionManager_LoginAndLogoutLifecycle() {
+        assertFalse("Inicialmente no hay sesión autenticada.", SessionManager.isAuthenticated)
+        assertNull("El usuario actual debe ser nulo.", SessionManager.currentUser.value)
+
+        val testUser = User(
+            id = 1,
+            username = "admin",
+            passwordHash = "fakehash",
+            saltHex = "fakesalt",
+            role = Role.ADMIN,
+            fullName = "Rodrigo Peña"
+        )
+
+        val token = SessionManager.login(testUser)
+        assertNotNull("El token de sesión generado no debe ser nulo.", token)
+        assertEquals(64, token.length) // 32 bytes en hex son 64 caracteres
+        assertTrue("Debe figurar autenticado.", SessionManager.isAuthenticated)
+        assertEquals(Role.ADMIN, SessionManager.currentRole)
+
+        SessionManager.logout()
+        assertFalse("Tras logout debe estar desautenticado.", SessionManager.isAuthenticated)
+        assertNull("El usuario actual debe ser nulo tras logout.", SessionManager.currentUser.value)
+    }
+
+    @Test
+    fun testInvernaderoState_CalculationsAndBounds() {
+        val state = InvernaderoState(
+            temperatura = 22.5f,
+            humedadAmbiente = 65.0f,
+            humedadSueloRaw = 550,
+            anguloVentana = 60,
+            velocidadVentiladorPwm = 128,
+            rutinaActiva = PlantProfile.PERFIL_TOMATE
+        )
+
+        assertTrue("22.5°C debe estar dentro del rango de tomate (20-26°C).", state.estaEnRangoTemperatura)
+        assertTrue("65% debe estar dentro del rango de tomate (60-70%).", state.estaEnRangoHumedad)
+        assertTrue("550 ADC debe estar dentro del rango óptimo de suelo (450-650).", state.estaEnRangoSuelo)
+        assertEquals(50, state.porcentajeVentilador)
+        assertEquals(50, state.porcentajeVentanaAbierta)
+        assertEquals(EstadoSuelo.OPTIMA, state.estadoSuelo)
+
+        // Estado seco
+        val dryState = state.copy(humedadSueloRaw = 950)
+        assertEquals(EstadoSuelo.FALTA_AGUA, dryState.estadoSuelo)
+        assertFalse("950 ADC debe estar fuera del rango óptimo.", dryState.estaEnRangoSuelo)
     }
 }
