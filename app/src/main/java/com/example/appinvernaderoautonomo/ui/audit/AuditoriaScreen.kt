@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.LockClock
+import androidx.compose.material.icons.rounded.LockOpen
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Shield
@@ -105,6 +106,19 @@ fun AuditoriaScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = {
+                        scope.launch {
+                            repository.unlockUser("admin", "Admin (Auditoría)")
+                            repository.unlockUser("operador", "Admin (Auditoría)")
+                            cargarLogs()
+                        }
+                    }) {
+                        Icon(
+                            imageVector = Icons.Rounded.LockOpen,
+                            contentDescription = "Desbloquear Cuentas Fail-Safe",
+                            tint = Color.White
+                        )
+                    }
                     IconButton(onClick = { cargarLogs() }) {
                         Icon(
                             imageVector = Icons.Rounded.Refresh,

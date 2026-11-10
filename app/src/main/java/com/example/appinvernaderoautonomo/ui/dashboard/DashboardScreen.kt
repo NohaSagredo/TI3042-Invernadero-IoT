@@ -117,6 +117,11 @@ fun DashboardScreen(
             )
         }
 
+        // Alerta Agronómica (Humedad radicular / Estrés)
+        if (state.alertaSeguridad != null) {
+            BannerAlertaAgronomica(mensaje = state.alertaSeguridad)
+        }
+
         // Banner de Alerta si algún actuador está en modo Manual Override
         if (state.hayModoManualActivo) {
             BannerModoManual(
@@ -343,6 +348,35 @@ private fun BannerFailSafeBorde(
                 Spacer(modifier = Modifier.width(6.dp))
                 Text("Reintentar Enlace Wi-Fi", fontSize = 12.sp)
             }
+        }
+    }
+}
+
+@Composable
+private fun BannerAlertaAgronomica(mensaje: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E1)),
+        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFE082)))
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.WarningAmber,
+                contentDescription = "Alerta",
+                tint = Color(0xFFF57F17),
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = mensaje,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFFE65100)
+            )
         }
     }
 }

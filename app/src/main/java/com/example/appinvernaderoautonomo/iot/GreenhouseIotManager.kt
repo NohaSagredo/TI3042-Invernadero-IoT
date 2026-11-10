@@ -16,6 +16,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.URL
 import kotlin.random.Random
 
 class GreenhouseIotManager private constructor(context: Context) {
@@ -41,6 +47,11 @@ class GreenhouseIotManager private constructor(context: Context) {
     }
 
     init {
+        scope.launch {
+            // Guardar instantánea inicial de arranque para disponibilidad inmediata en historial
+            delay(1000L)
+            guardarInstantaneaTelemetria()
+        }
         iniciarLazoControl()
         iniciarMuestreoCincoMinutos()
     }
@@ -49,8 +60,8 @@ class GreenhouseIotManager private constructor(context: Context) {
         loopJob?.cancel()
         loopJob = scope.launch {
             while (isActive) {
-                delay(3000L) // Actualización periódica cada 3s
-                actualizarCicloControl()
+                delay(3000L)
+                procesarCicloIoT()
             }
         }
     }
@@ -59,7 +70,7 @@ class GreenhouseIotManager private constructor(context: Context) {
         telemetryJob?.cancel()
         telemetryJob = scope.launch {
             while (isActive) {
-                delay(5 * 60 * 1000L) // Muestreo exacto cada 5 minutos
+                delay(5 * 60 * 1000L) // Muestreo periódico exacto cada 5 minutos
                 guardarInstantaneaTelemetria()
             }
         }
@@ -80,11 +91,10 @@ class GreenhouseIotManager private constructor(context: Context) {
         repository.recordTelemetry(log)
     }
 
-    private fun actualizarCicloControl() {
+    private suspend fun procesarCicloIoT() {
         val current = _state.value
 
-        // Si se encuentra en modo Fail-Safe por corte Wi-Fi, el nodo físico ESP32
-        // mantiene los actuadores en posición segura para la planta seleccionada
+        // Si se encuentra en modo Fail-Safe por corte forzado de enlace
         if (!current.estaConectado || current.modoFailSafeBorde) {
             _state.value = current.copy(
                 anguloVentana = 45,
@@ -94,7 +104,51 @@ class GreenhouseIotManager private constructor(context: Context) {
             return
         }
 
-        // Variación biológica natural leve de los sensores
+        // Intento de conexión HTTP real con el nodo ESP32 físico
+        val datosHardware = consultarEsp32Real(current.ipNodoEsp32)
+        if (datosHardware != null) {
+            _state.value = current.copy(
+                temperatura = datosHardware.optDouble("temperatura", current.temperatura.toDouble()).toFloat(),
+                humedadAmbiente = datosHardware.optDouble("humedad", current.humedadAmbiente.toDouble()).toFloat(),
+                humedadSueloRaw = datosHardware.optInt("sueloRaw", current.humedadSueloRaw),
+                anguloVentana = datosHardware.optInt("servoAngulo", current.anguloVentana),
+                velocidadVentiladorPwm = datosHardware.optInt("fanPwm", current.velocidadVentiladorPwm),
+                modoFailSafeBorde = datosHardware.optBoolean("failSafe", false),
+                ultimoMensaje = "Conectado por Wi-Fi directo con ESP32 (${current.ipNodoEsp32})"
+            )
+            return
+        }
+
+        // Fallback a simulación biológica de precisión para demostración sin hardware físico
+        ejecutarSimulacionBiologica()
+    }
+
+    private suspend fun consultarEsp32Real(ip: String): JSONObject? = withContext(Dispatchers.IO) {
+        var conn: HttpURLConnection? = null
+        try {
+            val url = URL("http://$ip/api/telemetry")
+            conn = (url.openConnection() as HttpURLConnection).apply {
+                connectTimeout = 1500
+                readTimeout = 1500
+                requestMethod = "GET"
+            }
+            if (conn.responseCode == 200) {
+                val reader = BufferedReader(InputStreamReader(conn.inputStream))
+                val response = reader.readText()
+                reader.close()
+                JSONObject(response)
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            null
+        } finally {
+            conn?.disconnect()
+        }
+    }
+
+    private fun ejecutarSimulacionBiologica() {
+        val current = _state.value
         val deltaTemp = (Random.nextFloat() - 0.48f) * 0.2f
         val deltaHum = (Random.nextFloat() - 0.50f) * 0.3f
         val nuevaTemp = (current.temperatura + deltaTemp).coerceIn(14.0f, 35.0f)
@@ -104,29 +158,34 @@ class GreenhouseIotManager private constructor(context: Context) {
         var nuevoPwm = current.velocidadVentiladorPwm
         val rutina = current.rutinaActiva
 
-        // Control autónomo de actuadores si no están en modo manual
         if (!current.modoManualVentana) {
             nuevoAngulo = when {
                 nuevaTemp > rutina.tempMax -> rutina.targetServoAngle
-                nuevaTemp < rutina.tempMin -> 0 // Cerrar herméticamente por frío
-                else -> (rutina.targetServoAngle / 2) // Posición de confort
+                nuevaTemp < rutina.tempMin -> 0 // Cierre hermético contra heladas
+                else -> (rutina.targetServoAngle / 2) // Confort intermedio
             }
         }
 
         if (!current.modoManualVentilador) {
             nuevoPwm = when {
                 nuevaTemp > (rutina.tempMax + 1.0f) -> rutina.targetFanPwm
-                nuevaHum > rutina.humidityMax -> 150 // Ventilación por humedad excesiva
-                nuevaTemp < rutina.tempMin -> 0 // Apagar por bajas temperaturas
+                nuevaHum > rutina.humidityMax -> 150 // Disipar exceso de humedad fúngica
+                nuevaTemp < rutina.tempMin -> 0
                 else -> 0
             }
         }
+
+        // Alerta agronómica si el sustrato radicular está seco
+        val alerta = if (current.humedadSueloRaw > 850) {
+            "Déficit hídrico detectado en sustrato radicular (FC-28: ${current.humedadSueloRaw})."
+        } else null
 
         _state.value = current.copy(
             temperatura = String.format("%.1f", nuevaTemp).replace(',', '.').toFloat(),
             humedadAmbiente = String.format("%.1f", nuevaHum).replace(',', '.').toFloat(),
             anguloVentana = nuevoAngulo,
             velocidadVentiladorPwm = nuevoPwm,
+            alertaSeguridad = alerta,
             ultimoMensaje = "Telemetría Wi-Fi nominal | ${rutina.name}"
         )
     }
@@ -142,7 +201,7 @@ class GreenhouseIotManager private constructor(context: Context) {
             )
             repository.recordAuditLog(
                 eventType = AuditEventType.ROUTINE_CHANGED,
-                details = "Rutina cambiada de '${prev.name}' a '${perfil.name}'.",
+                details = "Rutina conmutada de '${prev.name}' a '${perfil.name}'.",
                 username = usuario.username,
                 role = usuario.role.name
             )
@@ -171,7 +230,7 @@ class GreenhouseIotManager private constructor(context: Context) {
             )
             repository.recordAuditLog(
                 eventType = AuditEventType.MANUAL_OVERRIDE,
-                details = "Forzado manual de compuerta a $anguloClamped°.",
+                details = "Forzado manual de compuerta batiente a $anguloClamped°.",
                 username = usuario.username,
                 role = usuario.role.name
             )
@@ -227,6 +286,19 @@ class GreenhouseIotManager private constructor(context: Context) {
                 else "Restablecimiento de enlace Wi-Fi con ESP32.",
                 username = usuario?.username ?: "SISTEMA",
                 role = usuario?.role?.name ?: "SISTEMA"
+            )
+        }
+    }
+
+    fun actualizarIpEsp32(nuevaIp: String, usuario: User) {
+        if (!usuario.role.canEditThresholds()) return
+        scope.launch {
+            _state.value = _state.value.copy(ipNodoEsp32 = nuevaIp.trim())
+            repository.recordAuditLog(
+                eventType = AuditEventType.SYSTEM_RESET,
+                details = "Dirección IP del nodo ESP32 actualizada a: '$nuevaIp'.",
+                username = usuario.username,
+                role = usuario.role.name
             )
         }
     }

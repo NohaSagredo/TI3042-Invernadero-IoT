@@ -14,8 +14,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Thermostat
-import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -28,14 +26,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.appinvernaderoautonomo.model.PlantProfile
 
 @Composable
@@ -48,13 +45,15 @@ fun ThresholdDialog(
     var tempMax by remember { mutableFloatStateOf(profile.tempMax) }
     var humMin by remember { mutableFloatStateOf(profile.humidityMin) }
     var humMax by remember { mutableFloatStateOf(profile.humidityMax) }
+    var soilMin by remember { mutableIntStateOf(profile.soilRawMin) }
+    var soilMax by remember { mutableIntStateOf(profile.soilRawMax) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Column {
                 Text(
-                    text = "Calibrar Umbrales Críticos",
+                    text = "Calibrar Umbrales Biológicos (Admin)",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF1B5E20)
@@ -71,7 +70,7 @@ fun ThresholdDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 // Temperatura Min
                 Column {
@@ -184,6 +183,62 @@ fun ThresholdDialog(
                         )
                     )
                 }
+
+                // Sustrato Suelo FC-28 Min
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Suelo FC-28 ADC Mínimo (Óptimo)",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "ADC $soilMin",
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF5D4037)
+                        )
+                    }
+                    Slider(
+                        value = soilMin.toFloat(),
+                        onValueChange = { soilMin = it.toInt().coerceAtMost(soilMax - 50) },
+                        valueRange = 200f..800f,
+                        colors = SliderDefaults.colors(
+                            thumbColor = Color(0xFF5D4037),
+                            activeTrackColor = Color(0xFF5D4037)
+                        )
+                    )
+                }
+
+                // Sustrato Suelo FC-28 Max
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Suelo FC-28 ADC Máximo (Límite Sequedad)",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "ADC $soilMax",
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF795548)
+                        )
+                    }
+                    Slider(
+                        value = soilMax.toFloat(),
+                        onValueChange = { soilMax = it.toInt().coerceAtLeast(soilMin + 50) },
+                        valueRange = 400f..1000f,
+                        colors = SliderDefaults.colors(
+                            thumbColor = Color(0xFF795548),
+                            activeTrackColor = Color(0xFF795548)
+                        )
+                    )
+                }
             }
         },
         confirmButton = {
@@ -193,7 +248,9 @@ fun ThresholdDialog(
                         tempMin = tempMin,
                         tempMax = tempMax,
                         humidityMin = humMin,
-                        humidityMax = humMax
+                        humidityMax = humMax,
+                        soilRawMin = soilMin,
+                        soilRawMax = soilMax
                     )
                     onConfirm(updated)
                 },

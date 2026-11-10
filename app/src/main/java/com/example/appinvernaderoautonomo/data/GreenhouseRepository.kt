@@ -28,6 +28,10 @@ class GreenhouseRepository private constructor(context: Context) {
 
     private val dbHelper = GreenhouseDbHelper(context.applicationContext)
 
+    init {
+        FailSafeLockoutManager.init(context.applicationContext)
+    }
+
     companion object {
         @Volatile
         private var INSTANCE: GreenhouseRepository? = null
@@ -163,6 +167,30 @@ class GreenhouseRepository private constructor(context: Context) {
 
             return@withContext AuthResult.Success(user)
         }
+
+    suspend fun unlockUser(username: String, adminActor: String): Boolean = withContext(Dispatchers.IO) {
+        val db = dbHelper.writableDatabase
+        val cv = ContentValues().apply {
+            put(GreenhouseDbHelper.COL_USER_FAILED_ATTEMPTS, 0)
+            put(GreenhouseDbHelper.COL_USER_LOCKOUT_UNTIL, 0)
+        }
+        val rows = db.update(
+            GreenhouseDbHelper.TABLE_USERS,
+            cv,
+            "${GreenhouseDbHelper.COL_USER_USERNAME} = ?",
+            arrayOf(username.trim().lowercase())
+        )
+        if (rows > 0) {
+            FailSafeLockoutManager.reset()
+            recordAuditLogInternal(
+                eventType = AuditEventType.SYSTEM_RESET,
+                details = "Desbloqueo administrativo ejecutado por $adminActor para la cuenta: '$username'.",
+                username = adminActor,
+                role = Role.ADMIN.name
+            )
+        }
+        rows > 0
+    }
 
     suspend fun getPlantProfiles(): List<PlantProfile> = withContext(Dispatchers.IO) {
         val list = mutableListOf<PlantProfile>()
