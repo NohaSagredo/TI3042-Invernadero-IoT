@@ -1,6 +1,7 @@
 package com.example.appinvernaderoautonomo.ui.dashboard
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -22,15 +23,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Air
 import androidx.compose.material.icons.rounded.Autorenew
 import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Eco
 import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.MeetingRoom
 import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material.icons.rounded.Security
+import androidx.compose.material.icons.rounded.Sensors
 import androidx.compose.material.icons.rounded.Thermostat
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.WarningAmber
@@ -69,6 +68,16 @@ import com.example.appinvernaderoautonomo.model.PlantProfile
 import com.example.appinvernaderoautonomo.model.Role
 import com.example.appinvernaderoautonomo.model.User
 import com.example.appinvernaderoautonomo.ui.thresholds.ThresholdDialog
+
+// Paleta cromática intencional y contrastada (Anti-Slop / Blanco y Verde Agrícola)
+private val ColorFondo = Color(0xFFF7FBF8)
+private val ColorVerdePrimario = Color(0xFF1E7E34)
+private val ColorVerdeOscuro = Color(0xFF145A27)
+private val ColorVerdeSuave = Color(0xFFE8F5E9)
+private val ColorVerdeBorde = Color(0xFFC8E6C9)
+private val ColorTextoPrincipal = Color(0xFF1C2833)
+private val ColorTextoSecundario = Color(0xFF5D6D7E)
+private val ColorBordeCard = Color(0xFFE5ECE7)
 
 @Composable
 fun DashboardScreen(
@@ -109,12 +118,12 @@ fun DashboardScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF8FAF9))
+            .background(ColorFondo)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Cabecera de Usuario y Rol RBAC
+        // NIVEL 1: Header de Identidad y Sesión RBAC
         HeaderUsuarioRBAC(
             user = currentUser,
             estaConectado = state.estaConectado,
@@ -124,7 +133,7 @@ fun DashboardScreen(
             onCerrarSesion = onCerrarSesion
         )
 
-        // Banner Fail-Safe de Borde si se pierde la conexión Wi-Fi
+        // BANNERS DE CONTINGENCIA Y ESTADO OPERATIVO
         if (!state.estaConectado || state.modoFailSafeBorde) {
             BannerFailSafeBorde(
                 perfil = state.rutinaActiva,
@@ -132,12 +141,10 @@ fun DashboardScreen(
             )
         }
 
-        // Alerta Agronómica (Humedad radicular / Estrés)
         if (state.alertaSeguridad != null) {
             BannerAlertaAgronomica(mensaje = state.alertaSeguridad)
         }
 
-        // Banner de Alerta si algún actuador está en modo Manual Override
         if (state.hayModoManualActivo) {
             BannerModoManual(
                 puedeResetear = currentUser.role.canOverrideActuators(),
@@ -145,12 +152,11 @@ fun DashboardScreen(
             )
         }
 
-        // SECCIÓN 1: Telemetría Ambiental en Tiempo Real
-        Text(
-            text = "Telemetría Ambiental en Vivo (DHT22 & FC-28)",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF1B5E20)
+        // NIVEL 2: Telemetría Ambiental en Tiempo Real
+        EncabezadoSeccion(
+            titulo = "TELEMETRÍA AMBIENTAL EN VIVO",
+            subtitulo = "Sensores de campo DHT22 (Clima) y FC-28 (Sustrato)",
+            icono = Icons.Rounded.Sensors
         )
 
         Row(
@@ -158,27 +164,27 @@ fun DashboardScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             TarjetaSensor(
-                titulo = "Temperatura",
+                titulo = "TEMPERATURA",
                 valor = "${String.format("%.1f", state.temperatura)} °C",
                 rangoEsperado = state.rutinaActiva.tempRangeText,
                 estaEnRango = state.estaEnRangoTemperatura,
                 icono = Icons.Rounded.Thermostat,
-                colorIcono = if (state.estaEnRangoTemperatura) Color(0xFF2E7D32) else Color(0xFFE65100),
+                colorIcono = if (state.estaEnRangoTemperatura) Color(0xFF2E7D32) else Color(0xFFD32F2F),
                 modifier = Modifier.weight(1f)
             )
 
             TarjetaSensor(
-                titulo = "Humedad Aire",
+                titulo = "HUMEDAD AIRE",
                 valor = "${String.format("%.1f", state.humedadAmbiente)} %",
                 rangoEsperado = state.rutinaActiva.humidityRangeText,
                 estaEnRango = state.estaEnRangoHumedad,
                 icono = Icons.Rounded.WaterDrop,
-                colorIcono = if (state.estaEnRangoHumedad) Color(0xFF0288D1) else Color(0xFFE65100),
+                colorIcono = if (state.estaEnRangoHumedad) Color(0xFF0288D1) else Color(0xFFD32F2F),
                 modifier = Modifier.weight(1f)
             )
         }
 
-        // Tarjeta Humedad de Suelo
+        // Tarjeta Humedad de Suelo (FC-28)
         TarjetaHumedadSuelo(
             raw = state.humedadSueloRaw,
             estado = state.estadoSuelo,
@@ -186,7 +192,13 @@ fun DashboardScreen(
             estaEnRango = state.estaEnRangoSuelo
         )
 
-        // SECCIÓN 2: Rutina Activa y Parámetros Agronómicos
+        // NIVEL 3: Rutina Biológica Activa y Calibración
+        EncabezadoSeccion(
+            titulo = "REGULACIÓN BIOLÓGICA",
+            subtitulo = "Gestión de perfiles de cultivo y límites microclimáticos",
+            icono = Icons.Rounded.Eco
+        )
+
         TarjetaRutinaCultivo(
             perfilActivo = state.rutinaActiva,
             userRole = currentUser.role,
@@ -194,12 +206,11 @@ fun DashboardScreen(
             onAbrirCalibracion = { mostrarDialogoUmbrales = true }
         )
 
-        // SECCIÓN 3: Actuadores Físicos (Compuerta Servo SG90 y Extractor 12V MOSFET)
-        Text(
-            text = "Actuadores Físicos del Invernadero",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF1B5E20)
+        // NIVEL 4: Actuadores Físicos de Mitigación
+        EncabezadoSeccion(
+            titulo = "ACTUADORES DE PLANTA",
+            subtitulo = "Control proporcional cenital y ventilación forzada 12V",
+            icono = Icons.Rounded.PowerSettingsNew
         )
 
         // Compuerta Batiente (Servo SG90)
@@ -225,7 +236,7 @@ fun DashboardScreen(
             onApagar = { iotManager.setManualVentilador(0, currentUser) }
         )
 
-        // SECCIÓN 4: Acciones y Navegación según Rol RBAC
+        // NIVEL 5: Acciones de Navegación del Sistema (Botones consistentes)
         SeccionAccionesNavegacion(
             role = currentUser.role,
             onIrAHistorial = onIrAHistorial,
@@ -235,7 +246,50 @@ fun DashboardScreen(
         // Barra inferior de estado del enlace
         TarjetaEstadoEnlace(mensaje = state.ultimoMensaje, estaConectado = state.estaConectado)
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+    }
+}
+
+@Composable
+private fun EncabezadoSeccion(
+    titulo: String,
+    subtitulo: String,
+    icono: ImageVector
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp, bottom = 2.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(30.dp)
+                .background(ColorVerdeSuave, shape = RoundedCornerShape(8.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icono,
+                contentDescription = null,
+                tint = ColorVerdePrimario,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(10.dp))
+        Column {
+            Text(
+                text = titulo,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = ColorVerdeOscuro,
+                letterSpacing = 0.5.sp
+            )
+            Text(
+                text = subtitulo,
+                fontSize = 11.sp,
+                color = ColorTextoSecundario
+            )
+        }
     }
 }
 
@@ -252,102 +306,116 @@ private fun HeaderUsuarioRBAC(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
+        border = CardDefaults.outlinedCardBorder().copy(
+            brush = androidx.compose.ui.graphics.SolidColor(ColorBordeCard)
+        )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = user.fullName,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1F2923)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = Color(user.role.badgeColorHex)
-                        ) {
-                            Text(
-                                text = user.role.displayTitle.uppercase(),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Surface(
-                            onClick = onConfigurarIp,
-                            enabled = user.role == Role.ADMIN,
-                            shape = RoundedCornerShape(6.dp),
-                            color = Color(0xFFECEFF1)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = ipNodo,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color(0xFF37474F)
-                                )
-                                if (user.role == Role.ADMIN) {
-                                    Spacer(modifier = Modifier.width(3.dp))
-                                    Icon(
-                                        imageVector = Icons.Rounded.Tune,
-                                        contentDescription = "Editar IP",
-                                        tint = Color(0xFF546E7A),
-                                        modifier = Modifier.size(12.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = user.fullName,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = ColorTextoPrincipal
+                )
+                Spacer(modifier = Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Botón para simular caída de Wi-Fi y probar el Fail-Safe en vivo
-                    IconButton(
-                        onClick = onSimularConexion,
-                        modifier = Modifier
-                            .size(36.dp)
-                            .background(
-                                color = if (estaConectado) Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
-                                shape = CircleShape
-                            )
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color(user.role.badgeColorHex)
                     ) {
-                        Icon(
-                            imageVector = if (estaConectado) Icons.Rounded.Wifi else Icons.Rounded.WifiOff,
-                            contentDescription = "Estado Wi-Fi",
-                            tint = if (estaConectado) Color(0xFF1B5E20) else Color(0xFFC62828),
-                            modifier = Modifier.size(20.dp)
+                        Text(
+                            text = user.role.displayTitle.uppercase(),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
                     }
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    IconButton(
-                        onClick = onCerrarSesion,
-                        modifier = Modifier
-                            .size(36.dp)
-                            .background(Color(0xFFF5F5F5), shape = CircleShape)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.PowerSettingsNew,
-                            contentDescription = "Cerrar Sesión",
-                            tint = Color(0xFF757575),
-                            modifier = Modifier.size(18.dp)
+                    Surface(
+                        onClick = onConfigurarIp,
+                        enabled = user.role == Role.ADMIN,
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color(0xFFF1F5F2),
+                        border = CardDefaults.outlinedCardBorder().copy(
+                            brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFDCE5DF))
                         )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = ipNodo,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF2C3E50)
+                            )
+                            if (user.role == Role.ADMIN) {
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(
+                                    imageVector = Icons.Rounded.Tune,
+                                    contentDescription = "Editar IP",
+                                    tint = ColorVerdePrimario,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                            }
+                        }
                     }
+                }
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Botón Wi-Fi (Simulador / Estado de enlace)
+                IconButton(
+                    onClick = onSimularConexion,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            color = if (estaConectado) Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
+                            shape = CircleShape
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = if (estaConectado) Color(0xFFA5D6A7) else Color(0xFFFFCDD2),
+                            shape = CircleShape
+                        )
+                ) {
+                    Icon(
+                        imageVector = if (estaConectado) Icons.Rounded.Wifi else Icons.Rounded.WifiOff,
+                        contentDescription = "Estado Wi-Fi",
+                        tint = if (estaConectado) Color(0xFF1B5E20) else Color(0xFFC62828),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                // Botón Cerrar Sesión
+                IconButton(
+                    onClick = onCerrarSesion,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(Color(0xFFF5F7F6), shape = CircleShape)
+                        .border(1.dp, Color(0xFFE0E6E2), CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.PowerSettingsNew,
+                        contentDescription = "Cerrar Sesión",
+                        tint = Color(0xFF5D6D7E),
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
             }
         }
@@ -363,7 +431,9 @@ private fun BannerFailSafeBorde(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
-        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFEF9A9A)))
+        border = CardDefaults.outlinedCardBorder().copy(
+            brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFEF9A9A))
+        )
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -371,31 +441,39 @@ private fun BannerFailSafeBorde(
                     imageVector = Icons.Rounded.WarningAmber,
                     contentDescription = "Alerta Fail-Safe",
                     tint = Color(0xFFC62828),
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(22.dp)
                 )
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "FAIL-SAFE AUTÓNOMO DE BORDE ACTIVO",
+                    text = "FAIL-SAFE DE BORDE ACTIVO",
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFFB71C1C),
                     style = MaterialTheme.typography.titleSmall
                 )
             }
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Se interrumpió el enlace Wi-Fi. El microcontrolador ESP32 continúa regulando en lazo cerrado autónomo para proteger el '${perfil.name}'. Compuerta en 45° de resguardo biológico.",
+                text = "Enlace Wi-Fi interrumpido. El nodo ESP32 regula de forma autónoma para proteger el cultivo de '${perfil.name}' (Compuerta en 45°).",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFFC62828)
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             OutlinedButton(
                 onClick = onReconectar,
-                shape = RoundedCornerShape(6.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFB71C1C))
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(38.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFB71C1C)),
+                border = BorderStroke(1.dp, Color(0xFFEF9A9A))
             ) {
-                Icon(imageVector = Icons.Rounded.Autorenew, contentDescription = "Restablecer", modifier = Modifier.size(16.dp))
+                Icon(
+                    imageVector = Icons.Rounded.Autorenew,
+                    contentDescription = "Reintentar",
+                    modifier = Modifier.size(16.dp)
+                )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("Reintentar Enlace Wi-Fi", fontSize = 12.sp)
+                Text("Reintentar Enlace Wi-Fi", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -407,7 +485,9 @@ private fun BannerAlertaAgronomica(mensaje: String) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E1)),
-        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFE082)))
+        border = CardDefaults.outlinedCardBorder().copy(
+            brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFE082))
+        )
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
@@ -438,7 +518,10 @@ private fun BannerModoManual(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0)),
+        border = CardDefaults.outlinedCardBorder().copy(
+            brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFCC80))
+        )
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
@@ -457,7 +540,7 @@ private fun BannerModoManual(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Control Manual Override Activo.",
+                    text = "Control Manual Override Activo",
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFFBF360C)
@@ -467,10 +550,11 @@ private fun BannerModoManual(
             if (puedeResetear) {
                 Button(
                     onClick = onReactivarAuto,
+                    modifier = Modifier.height(34.dp),
                     shape = RoundedCornerShape(6.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20))
+                    colors = ButtonDefaults.buttonColors(containerColor = ColorVerdePrimario)
                 ) {
-                    Text("Auto", fontSize = 11.sp)
+                    Text("Reactivar Auto", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -491,9 +575,16 @@ private fun TarjetaSensor(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        border = CardDefaults.outlinedCardBorder().copy(
+            brush = androidx.compose.ui.graphics.SolidColor(ColorBordeCard)
+        )
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -501,9 +592,10 @@ private fun TarjetaSensor(
             ) {
                 Text(
                     text = titulo,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF616161),
-                    fontWeight = FontWeight.Medium
+                    fontSize = 11.sp,
+                    color = ColorTextoSecundario,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.4.sp
                 )
                 Icon(
                     imageVector = icono,
@@ -521,24 +613,33 @@ private fun TarjetaSensor(
                     fontFeatureSettings = "tnum"
                 ),
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1F2923)
+                color = ColorTextoPrincipal
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .clip(CircleShape)
-                        .background(if (estaEnRango) Color(0xFF2E7D32) else Color(0xFFE65100))
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "Óptimo: $rangoEsperado",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF757575)
-                )
+            Surface(
+                shape = RoundedCornerShape(6.dp),
+                color = if (estaEnRango) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(if (estaEnRango) Color(0xFF2E7D32) else Color(0xFFC62828))
+                    )
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text(
+                        text = if (estaEnRango) "Óptimo: $rangoEsperado" else "Alerta: $rangoEsperado",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (estaEnRango) Color(0xFF1B5E20) else Color(0xFFC62828)
+                    )
+                }
             }
         }
     }
@@ -555,7 +656,10 @@ private fun TarjetaHumedadSuelo(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        border = CardDefaults.outlinedCardBorder().copy(
+            brush = androidx.compose.ui.graphics.SolidColor(ColorBordeCard)
+        )
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(
@@ -567,15 +671,15 @@ private fun TarjetaHumedadSuelo(
                     Icon(
                         imageVector = Icons.Rounded.Air,
                         contentDescription = "FC-28",
-                        tint = Color(0xFF388E3C),
-                        modifier = Modifier.size(20.dp)
+                        tint = ColorVerdePrimario,
+                        modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "Humedad Radicular (Suelo FC-28)",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1F2923)
+                        color = ColorTextoPrincipal
                     )
                 }
 
@@ -584,8 +688,8 @@ private fun TarjetaHumedadSuelo(
                     color = if (estaEnRango) Color(0xFFE8F5E9) else Color(0xFFFFF3E0)
                 ) {
                     Text(
-                        text = estado.titulo,
-                        style = MaterialTheme.typography.labelSmall,
+                        text = estado.titulo.uppercase(),
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (estaEnRango) Color(0xFF1B5E20) else Color(0xFFE65100),
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
@@ -601,18 +705,21 @@ private fun TarjetaHumedadSuelo(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Valor ADC: $raw / 1023",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
+                    text = "ADC: $raw / 1023",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontFeatureSettings = "tnum"
+                    ),
+                    fontWeight = FontWeight.Bold,
+                    color = ColorTextoPrincipal
                 )
                 Text(
                     text = "Rango Seguro: $rangoEsperado",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF757575)
+                    color = ColorTextoSecundario
                 )
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             val progreso = (1023 - raw.coerceIn(0, 1023)) / 1023f
             LinearProgressIndicator(
@@ -621,7 +728,7 @@ private fun TarjetaHumedadSuelo(
                     .fillMaxWidth()
                     .height(8.dp)
                     .clip(RoundedCornerShape(4.dp)),
-                color = Color(0xFF388E3C),
+                color = ColorVerdePrimario,
                 trackColor = Color(0xFFE0E0E0)
             )
         }
@@ -637,111 +744,252 @@ private fun TarjetaRutinaCultivo(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
+        border = CardDefaults.outlinedCardBorder().copy(
+            brush = androidx.compose.ui.graphics.SolidColor(ColorBordeCard)
+        )
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Fila de Encabezado: Título y Nombre Hero
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Rounded.Eco,
-                        contentDescription = "Rutina",
-                        tint = Color(0xFF1B5E20),
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                Column {
                     Text(
-                        text = "Rutina Activa del Invernadero",
-                        style = MaterialTheme.typography.titleSmall,
+                        text = "PERFIL BIOLÓGICO ACTIVO",
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1B5E20)
+                        color = ColorTextoSecundario,
+                        letterSpacing = 0.5.sp
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = perfilActivo.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = ColorVerdeOscuro
                     )
                 }
 
-                if (userRole.canEditThresholds()) {
-                    FilledTonalButton(
-                        onClick = onAbrirCalibracion,
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Icon(imageVector = Icons.Rounded.Tune, contentDescription = "Calibrar", modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Calibrar", fontSize = 11.sp)
+                Surface(
+                    shape = CircleShape,
+                    color = ColorVerdeSuave,
+                    modifier = Modifier.size(38.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Rounded.Eco,
+                            contentDescription = "Rutina",
+                            tint = ColorVerdePrimario,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = perfilActivo.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1F2923)
-            )
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = perfilActivo.description,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF616161)
+                color = ColorTextoSecundario
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Selector de rutinas preestablecidas
+            // Micro-Grid de Parámetros Activos
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = Color(0xFFF7FBF8),
+                border = CardDefaults.outlinedCardBorder().copy(
+                    brush = androidx.compose.ui.graphics.SolidColor(ColorVerdeBorde)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 10.dp, horizontal = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
+                        Text("TEMP", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = ColorTextoSecundario)
+                        Text(perfilActivo.tempRangeText, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = ColorTextoPrincipal)
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
+                        Text("HUMEDAD", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = ColorTextoSecundario)
+                        Text(perfilActivo.humidityRangeText, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = ColorTextoPrincipal)
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
+                        Text("SUELO ADC", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = ColorTextoSecundario)
+                        Text(perfilActivo.soilRangeText, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = ColorTextoPrincipal)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Selector de Rutinas (Botones de igual tamaño en cuadrícula 2x2 consistente)
             if (userRole.canChangeRoutines()) {
                 Text(
-                    text = "Conmutar Rutina Preestablecida:",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF757575),
-                    fontWeight = FontWeight.Medium
+                    text = "CONMUTAR RUTINA DE CULTIVO:",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ColorTextoSecundario,
+                    letterSpacing = 0.4.sp
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Fila 1: Tomate y Frutilla
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    PlantProfile.DEFAULT_PROFILES.forEach { perfil ->
-                        val esSeleccionado = perfil.id == perfilActivo.id
-                        Surface(
-                            onClick = { onSeleccionarRutina(perfil) },
-                            shape = RoundedCornerShape(8.dp),
-                            color = if (esSeleccionado) Color(0xFF1B5E20) else Color(0xFFF1F8E9),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Box(
-                                modifier = Modifier.padding(vertical = 8.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = perfil.id.lowercase().replaceFirstChar { it.uppercase() },
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (esSeleccionado) Color.White else Color(0xFF1B5E20)
-                                )
-                            }
-                        }
-                    }
+                    BotonSelectorRutina(
+                        titulo = "Tomate",
+                        esSeleccionado = perfilActivo.id == "TOMATE",
+                        onClick = {
+                            PlantProfile.DEFAULT_PROFILES.find { it.id == "TOMATE" }?.let(onSeleccionarRutina)
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    BotonSelectorRutina(
+                        titulo = "Frutilla",
+                        esSeleccionado = perfilActivo.id == "FRUTILLA",
+                        onClick = {
+                            PlantProfile.DEFAULT_PROFILES.find { it.id == "FRUTILLA" }?.let(onSeleccionarRutina)
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Fila 2: Lechuga y Personalizado
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    BotonSelectorRutina(
+                        titulo = "Lechuga",
+                        esSeleccionado = perfilActivo.id == "LECHUGA",
+                        onClick = {
+                            PlantProfile.DEFAULT_PROFILES.find { it.id == "LECHUGA" }?.let(onSeleccionarRutina)
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    BotonSelectorRutina(
+                        titulo = "Personalizado",
+                        esSeleccionado = perfilActivo.id == "CUSTOM",
+                        onClick = {
+                            PlantProfile.DEFAULT_PROFILES.find { it.id == "CUSTOM" }?.let(onSeleccionarRutina)
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             } else {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp))
+                        .padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = Icons.Rounded.Lock,
                         contentDescription = "Bloqueado",
-                        tint = Color(0xFF9E9E9E),
+                        tint = Color(0xFF757575),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Cambio de rutina restringido para el rol Auditor.",
+                        fontSize = 12.sp,
+                        color = Color(0xFF757575)
+                    )
+                }
+            }
+
+            // BOTÓN DE CALIBRACIÓN: Destacado, tamaño completo, texto visible sin cortes
+            if (userRole.canEditThresholds()) {
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Button(
+                    onClick = onAbrirCalibracion,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(46.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ColorVerdePrimario,
+                        contentColor = Color.White
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Tune,
+                        contentDescription = "Calibrar",
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Calibrar Umbrales Biológicos",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BotonSelectorRutina(
+    titulo: String,
+    esSeleccionado: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(10.dp),
+        color = if (esSeleccionado) ColorVerdePrimario else Color(0xFFF4F7F5),
+        border = CardDefaults.outlinedCardBorder().copy(
+            brush = androidx.compose.ui.graphics.SolidColor(
+                if (esSeleccionado) ColorVerdeOscuro else Color(0xFFD5DFD8)
+            )
+        ),
+        modifier = modifier.height(42.dp)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                if (esSeleccionado) {
+                    Icon(
+                        imageVector = Icons.Rounded.CheckCircle,
+                        contentDescription = null,
+                        tint = Color.White,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Cambio de rutina restringido para el rol Auditor.",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF9E9E9E)
-                    )
                 }
+                Text(
+                    text = titulo,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (esSeleccionado) Color.White else ColorTextoPrincipal
+                )
             }
         }
     }
@@ -759,11 +1007,15 @@ private fun TarjetaCompuertaServo(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        border = CardDefaults.outlinedCardBorder().copy(
+            brush = androidx.compose.ui.graphics.SolidColor(ColorBordeCard)
+        )
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Fila 1: Título y Badge de Modo
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -773,7 +1025,7 @@ private fun TarjetaCompuertaServo(
                     Icon(
                         imageVector = Icons.Rounded.MeetingRoom,
                         contentDescription = "Servo",
-                        tint = Color(0xFF1B5E20),
+                        tint = ColorVerdePrimario,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -782,12 +1034,12 @@ private fun TarjetaCompuertaServo(
                             text = "Ventilación Pasiva (Servo SG90)",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1F2923)
+                            color = ColorTextoPrincipal
                         )
                         Text(
-                            text = "Compuerta Batiente Superior",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF757575)
+                            text = "Compuerta Cenital Superior",
+                            fontSize = 11.sp,
+                            color = ColorTextoSecundario
                         )
                     }
                 }
@@ -798,8 +1050,8 @@ private fun TarjetaCompuertaServo(
                 ) {
                     Text(
                         text = if (esModoManual) "OVERRIDE" else "AUTO",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (esModoManual) Color(0xFFE65100) else Color(0xFF1B5E20)
                     )
@@ -808,43 +1060,62 @@ private fun TarjetaCompuertaServo(
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            // Métrica de Ángulo
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Ángulo: $anguloActual° ($porcentajeAbierto% abierta)",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold
+                    text = "Ángulo: $anguloActual°",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.Bold,
+                    color = ColorTextoPrincipal
                 )
+                Text(
+                    text = "$porcentajeAbierto% abierta",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = ColorVerdeOscuro
+                )
+            }
 
-                if (puedeControlar) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        FilledTonalButton(
-                            onClick = onCerrarCompuerta,
-                            shape = RoundedCornerShape(6.dp)
-                        ) {
-                            Text("0°", fontSize = 11.sp)
-                        }
-                        FilledTonalButton(
-                            onClick = onPosicionMedia,
-                            shape = RoundedCornerShape(6.dp)
-                        ) {
-                            Text("45°", fontSize = 11.sp)
-                        }
-                        FilledTonalButton(
-                            onClick = onAbrirCompuerta,
-                            shape = RoundedCornerShape(6.dp)
-                        ) {
-                            Text("90°", fontSize = 11.sp)
-                        }
-                    }
-                } else {
-                    Text(
-                        text = "Regulación automática",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF757575)
+            Spacer(modifier = Modifier.height(6.dp))
+
+            LinearProgressIndicator(
+                progress = { porcentajeAbierto / 100f },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp)),
+                color = ColorVerdePrimario,
+                trackColor = Color(0xFFE0E0E0)
+            )
+
+            // Fila 2: Botones de Control Manual (Mismo tamaño y altura)
+            if (puedeControlar) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    BotonControlActuador(
+                        texto = "0° (Cerrar)",
+                        esActivo = anguloActual == 0,
+                        onClick = onCerrarCompuerta,
+                        modifier = Modifier.weight(1f)
+                    )
+                    BotonControlActuador(
+                        texto = "45° (Media)",
+                        esActivo = anguloActual == 45,
+                        onClick = onPosicionMedia,
+                        modifier = Modifier.weight(1f)
+                    )
+                    BotonControlActuador(
+                        texto = "90° (Abrir)",
+                        esActivo = anguloActual == 90,
+                        onClick = onAbrirCompuerta,
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
@@ -865,11 +1136,15 @@ private fun TarjetaVentiladorMosfet(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        border = CardDefaults.outlinedCardBorder().copy(
+            brush = androidx.compose.ui.graphics.SolidColor(ColorBordeCard)
+        )
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Fila 1: Título y Modo
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -879,7 +1154,7 @@ private fun TarjetaVentiladorMosfet(
                     Icon(
                         imageVector = Icons.Rounded.Air,
                         contentDescription = "Ventilador",
-                        tint = Color(0xFF1B5E20),
+                        tint = ColorVerdePrimario,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -888,12 +1163,12 @@ private fun TarjetaVentiladorMosfet(
                             text = "Ventilación Forzada (12V MOSFET)",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1F2923)
+                            color = ColorTextoPrincipal
                         )
                         Text(
-                            text = "Driver IRF520N + Flyback 1N4004",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF757575)
+                            text = "Driver IRF520N con PWM",
+                            fontSize = 11.sp,
+                            color = ColorTextoSecundario
                         )
                     }
                 }
@@ -904,8 +1179,8 @@ private fun TarjetaVentiladorMosfet(
                 ) {
                     Text(
                         text = if (esModoManual) "OVERRIDE" else "AUTO",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (esModoManual) Color(0xFFE65100) else Color(0xFF1B5E20)
                     )
@@ -914,55 +1189,105 @@ private fun TarjetaVentiladorMosfet(
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            // Métrica de Potencia
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(
-                        text = "$porcentaje % (PWM $pwmActual)",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(
+                    text = "Potencia: $porcentaje%",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.Bold,
+                    color = ColorTextoPrincipal
+                )
+                Text(
+                    text = "PWM: $pwmActual / 255",
+                    fontSize = 12.sp,
+                    color = ColorTextoSecundario
+                )
+            }
 
-                if (puedeControlar) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        FilledTonalButton(
-                            onClick = onBajarVelocidad,
-                            shape = RoundedCornerShape(6.dp)
-                        ) {
-                            Icon(imageVector = Icons.Rounded.KeyboardArrowDown, contentDescription = "Bajar", modifier = Modifier.size(16.dp))
-                        }
-                        FilledTonalButton(
-                            onClick = onSubirVelocidad,
-                            shape = RoundedCornerShape(6.dp)
-                        ) {
-                            Icon(imageVector = Icons.Rounded.KeyboardArrowUp, contentDescription = "Subir", modifier = Modifier.size(16.dp))
-                        }
-                        Button(
-                            onClick = onMaximo,
-                            shape = RoundedCornerShape(6.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
-                        ) {
-                            Text("MAX", fontSize = 10.sp)
-                        }
-                        OutlinedButton(
-                            onClick = onApagar,
-                            shape = RoundedCornerShape(6.dp)
-                        ) {
-                            Text("OFF", fontSize = 10.sp)
-                        }
-                    }
-                } else {
-                    Text(
-                        text = "Regulación automática",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF757575)
+            Spacer(modifier = Modifier.height(6.dp))
+
+            LinearProgressIndicator(
+                progress = { porcentaje / 100f },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp)),
+                color = Color(0xFF0288D1),
+                trackColor = Color(0xFFE0E0E0)
+            )
+
+            // Fila 2: Botones de Control Manual (4 botones de idéntico tamaño y altura)
+            if (puedeControlar) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    BotonControlActuador(
+                        texto = "– 15%",
+                        esActivo = false,
+                        onClick = onBajarVelocidad,
+                        modifier = Modifier.weight(1f)
+                    )
+                    BotonControlActuador(
+                        texto = "+ 15%",
+                        esActivo = false,
+                        onClick = onSubirVelocidad,
+                        modifier = Modifier.weight(1f)
+                    )
+                    BotonControlActuador(
+                        texto = "100% MAX",
+                        esActivo = pwmActual >= 250,
+                        onClick = onMaximo,
+                        colorActivo = Color(0xFFD32F2F),
+                        modifier = Modifier.weight(1f)
+                    )
+                    BotonControlActuador(
+                        texto = "0% OFF",
+                        esActivo = pwmActual == 0,
+                        onClick = onApagar,
+                        colorActivo = Color(0xFF455A64),
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun BotonControlActuador(
+    texto: String,
+    esActivo: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    colorActivo: Color = ColorVerdePrimario
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(8.dp),
+        color = if (esActivo) colorActivo else Color(0xFFF1F5F2),
+        border = CardDefaults.outlinedCardBorder().copy(
+            brush = androidx.compose.ui.graphics.SolidColor(
+                if (esActivo) colorActivo else Color(0xFFD0DCD4)
+            )
+        ),
+        modifier = modifier.height(42.dp)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = texto,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (esActivo) Color.White else ColorTextoPrincipal
+            )
         }
     }
 }
@@ -979,25 +1304,39 @@ private fun SeccionAccionesNavegacion(
     ) {
         Button(
             onClick = onIrAHistorial,
-            modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(10.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20))
+            modifier = Modifier
+                .weight(1f)
+                .height(48.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = ColorVerdePrimario),
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
         ) {
-            Icon(imageVector = Icons.Rounded.History, contentDescription = "Historial", modifier = Modifier.size(18.dp))
+            Icon(
+                imageVector = Icons.Rounded.History,
+                contentDescription = "Historial",
+                modifier = Modifier.size(18.dp)
+            )
             Spacer(modifier = Modifier.width(6.dp))
-            Text("Historial (5 min)", fontSize = 13.sp)
+            Text("Historial (5 min)", fontSize = 13.sp, fontWeight = FontWeight.Bold)
         }
 
         if (role.canViewAuditLogs()) {
             Button(
                 onClick = onIrAAuditoria,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0277BD))
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0277BD)),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
             ) {
-                Icon(imageVector = Icons.Rounded.Security, contentDescription = "Auditoría", modifier = Modifier.size(18.dp))
+                Icon(
+                    imageVector = Icons.Rounded.Security,
+                    contentDescription = "Auditoría",
+                    modifier = Modifier.size(18.dp)
+                )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("Auditoría ISO", fontSize = 13.sp)
+                Text("Auditoría ISO", fontSize = 13.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -1006,12 +1345,12 @@ private fun SeccionAccionesNavegacion(
 @Composable
 private fun TarjetaEstadoEnlace(mensaje: String, estaConectado: Boolean) {
     Surface(
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(10.dp),
         color = Color(0xFFECEFF1),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -1020,10 +1359,11 @@ private fun TarjetaEstadoEnlace(mensaje: String, estaConectado: Boolean) {
                     .clip(CircleShape)
                     .background(if (estaConectado) Color(0xFF2E7D32) else Color(0xFFC62828))
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(10.dp))
             Text(
                 text = mensaje,
-                style = MaterialTheme.typography.bodySmall,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
                 color = Color(0xFF37474F)
             )
         }

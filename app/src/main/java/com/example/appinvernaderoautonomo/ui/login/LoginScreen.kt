@@ -2,11 +2,10 @@ package com.example.appinvernaderoautonomo.ui.login
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -62,6 +61,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.appinvernaderoautonomo.data.AuthResult
@@ -71,7 +71,9 @@ import com.example.appinvernaderoautonomo.security.FailSafeLockoutManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalLayoutApi::class)
+private val ColorVerdePrimario = Color(0xFF1E7E34)
+private val ColorVerdeOscuro = Color(0xFF145A27)
+
 @Composable
 fun LoginScreen(
     repository: GreenhouseRepository,
@@ -137,8 +139,8 @@ fun LoginScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF8FAF9))
-            .padding(24.dp),
+            .background(Color(0xFFF7FBF8))
+            .padding(horizontal = 20.dp, vertical = 16.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -152,36 +154,39 @@ fun LoginScreen(
             Surface(
                 shape = CircleShape,
                 color = Color(0xFFE8F5E9),
-                modifier = Modifier.size(72.dp)
+                border = CardDefaults.outlinedCardBorder().copy(
+                    brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFC8E6C9))
+                ),
+                modifier = Modifier.size(68.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Rounded.Eco,
                         contentDescription = "Eco",
-                        tint = Color(0xFF1B5E20),
-                        modifier = Modifier.size(40.dp)
+                        tint = ColorVerdePrimario,
+                        modifier = Modifier.size(38.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             Text(
-                text = "Invernadero Inteligente IoT",
+                text = "Invernadero Autónomo IoT",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1B5E20),
+                color = ColorVerdeOscuro,
                 textAlign = TextAlign.Center
             )
 
             Text(
-                text = "HMI de Supervisión y Control OT • TI3042",
+                text = "HMI de Supervisión y Regulación Biológica • TI3042",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF556052),
+                color = Color(0xFF5D6D7E),
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Banner Fail-Safe de Bloqueo
             AnimatedVisibility(visible = isLockedOut) {
@@ -190,7 +195,10 @@ fun LoginScreen(
                         .fillMaxWidth()
                         .padding(bottom = 16.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE))
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                    border = CardDefaults.outlinedCardBorder().copy(
+                        brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFEF9A9A))
+                    )
                 ) {
                     Row(
                         modifier = Modifier.padding(14.dp),
@@ -200,7 +208,7 @@ fun LoginScreen(
                             imageVector = Icons.Rounded.LockClock,
                             contentDescription = "Bloqueado",
                             tint = Color(0xFFC62828),
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(30.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
@@ -225,7 +233,10 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
+                border = CardDefaults.outlinedCardBorder().copy(
+                    brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFE5ECE7))
+                )
             ) {
                 Column(
                     modifier = Modifier.padding(20.dp),
@@ -235,7 +246,7 @@ fun LoginScreen(
                         text = "Autenticación de Acceso",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1F2923)
+                        color = Color(0xFF1C2833)
                     )
 
                     OutlinedTextField(
@@ -249,15 +260,16 @@ fun LoginScreen(
                             Icon(
                                 imageVector = Icons.Rounded.Person,
                                 contentDescription = "Usuario",
-                                tint = Color(0xFF2E7D32)
+                                tint = ColorVerdePrimario
                             )
                         },
                         singleLine = true,
                         enabled = !isLockedOut && !isLoading,
                         modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF2E7D32),
-                            focusedLabelColor = Color(0xFF2E7D32)
+                            focusedBorderColor = ColorVerdePrimario,
+                            focusedLabelColor = ColorVerdePrimario
                         ),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                     )
@@ -273,14 +285,15 @@ fun LoginScreen(
                             Icon(
                                 imageVector = Icons.Rounded.Lock,
                                 contentDescription = "Contraseña",
-                                tint = Color(0xFF2E7D32)
+                                tint = ColorVerdePrimario
                             )
                         },
                         trailingIcon = {
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                 Icon(
                                     imageVector = if (passwordVisible) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
-                                    contentDescription = "Ver contraseña"
+                                    contentDescription = "Ver contraseña",
+                                    tint = Color(0xFF5D6D7E)
                                 )
                             }
                         },
@@ -288,9 +301,10 @@ fun LoginScreen(
                         singleLine = true,
                         enabled = !isLockedOut && !isLoading,
                         modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF2E7D32),
-                            focusedLabelColor = Color(0xFF2E7D32)
+                            focusedBorderColor = ColorVerdePrimario,
+                            focusedLabelColor = ColorVerdePrimario
                         ),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
@@ -303,6 +317,9 @@ fun LoginScreen(
                         Surface(
                             shape = RoundedCornerShape(8.dp),
                             color = Color(0xFFFFF3E0),
+                            border = CardDefaults.outlinedCardBorder().copy(
+                                brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFCC80))
+                            ),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(
@@ -329,7 +346,7 @@ fun LoginScreen(
                         onClick = { ejecutarLogin() },
                         enabled = !isLockedOut && !isLoading,
                         shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20)),
+                        colors = ButtonDefaults.buttonColors(containerColor = ColorVerdePrimario),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp)
@@ -337,79 +354,80 @@ fun LoginScreen(
                         if (isLoading) {
                             CircularProgressIndicator(
                                 color = Color.White,
-                                modifier = Modifier.size(22.dp),
+                                modifier = Modifier.size(20.dp),
                                 strokeWidth = 2.dp
                             )
                         } else {
                             Text(
-                                text = if (isLockedOut) "Bloqueado ($remainingSeconds s)" else "Iniciar Sesión Segura",
+                                text = if (isLockedOut) "Bloqueado ($remainingSeconds s)" else "Iniciar Sesión",
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp
+                                fontSize = 14.sp
                             )
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-            // Selector rápido de roles para demostración en clase
+            // Selector rápido de roles para evaluación (Mismo tamaño, misma altura, perfectamente alineados)
             Text(
-                text = "Credenciales para Evaluación (Demo en Clase):",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6B7280),
-                fontWeight = FontWeight.Medium
+                text = "Credenciales Rápidas para Evaluación:",
+                fontSize = 11.sp,
+                color = Color(0xFF5D6D7E),
+                fontWeight = FontWeight.SemiBold
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            FlowRow(
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                ChipCredencial(
+                BotonCredencialDemo(
                     titulo = "Admin",
-                    subtitulo = "admin / admin123",
+                    subtitulo = "admin123",
                     colorFondo = Color(0xFFE8F5E9),
+                    colorBorde = Color(0xFFC8E6C9),
                     colorTexto = Color(0xFF1B5E20),
                     onClick = {
                         username = "admin"
                         password = "admin123"
                         errorMessage = null
-                    }
+                    },
+                    modifier = Modifier.weight(1f)
                 )
 
-                Spacer(modifier = Modifier.width(6.dp))
-
-                ChipCredencial(
+                BotonCredencialDemo(
                     titulo = "Operador",
-                    subtitulo = "operador / operador123",
+                    subtitulo = "operador123",
                     colorFondo = Color(0xFFF1F8E9),
+                    colorBorde = Color(0xFFDCEDC8),
                     colorTexto = Color(0xFF33691E),
                     onClick = {
                         username = "operador"
                         password = "operador123"
                         errorMessage = null
-                    }
+                    },
+                    modifier = Modifier.weight(1f)
                 )
 
-                Spacer(modifier = Modifier.width(6.dp))
-
-                ChipCredencial(
+                BotonCredencialDemo(
                     titulo = "Auditor",
-                    subtitulo = "auditor / auditor123",
+                    subtitulo = "auditor123",
                     colorFondo = Color(0xFFE1F5FE),
+                    colorBorde = Color(0xFFB3E5FC),
                     colorTexto = Color(0xFF01579B),
                     onClick = {
                         username = "auditor"
                         password = "auditor123"
                         errorMessage = null
-                    }
+                    },
+                    modifier = Modifier.weight(1f)
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             // Etiqueta de Ciberseguridad ISO / ISA
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -421,8 +439,8 @@ fun LoginScreen(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "Protegido por ISO 27400 & ISA/IEC 62443 • Hash PBKDF2 (10k)",
-                    style = MaterialTheme.typography.labelSmall,
+                    text = "Alineado con ISO 27400 & ISA/IEC 62443 • PBKDF2 10k",
+                    fontSize = 10.sp,
                     color = Color(0xFF78909C)
                 )
             }
@@ -431,21 +449,46 @@ fun LoginScreen(
 }
 
 @Composable
-private fun ChipCredencial(
+private fun BotonCredencialDemo(
     titulo: String,
     subtitulo: String,
     colorFondo: Color,
+    colorBorde: Color,
     colorTexto: Color,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(8.dp),
-        color = colorFondo
+        color = colorFondo,
+        border = CardDefaults.outlinedCardBorder().copy(
+            brush = androidx.compose.ui.graphics.SolidColor(colorBorde)
+        ),
+        modifier = modifier.height(44.dp)
     ) {
-        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
-            Text(text = titulo, fontWeight = FontWeight.Bold, color = colorTexto, fontSize = 11.sp)
-            Text(text = subtitulo, color = colorTexto.copy(alpha = 0.8f), fontSize = 10.sp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 4.dp, vertical = 2.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = titulo,
+                fontWeight = FontWeight.Bold,
+                color = colorTexto,
+                fontSize = 11.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = subtitulo,
+                color = colorTexto.copy(alpha = 0.8f),
+                fontSize = 9.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }

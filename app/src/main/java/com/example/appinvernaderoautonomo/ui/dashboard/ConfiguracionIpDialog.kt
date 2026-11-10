@@ -1,6 +1,9 @@
 package com.example.appinvernaderoautonomo.ui.dashboard
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.ErrorOutline
@@ -40,6 +44,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 
+private val ColorVerdePrimario = Color(0xFF1E7E34)
+
 @Composable
 fun ConfiguracionIpDialog(
     ipActual: String,
@@ -55,28 +61,45 @@ fun ConfiguracionIpDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Rounded.Router,
-                    contentDescription = "Router",
-                    tint = Color(0xFF1B5E20),
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Enlace Wi-Fi Nodo ESP32",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1B5E20)
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(Color(0xFFE8F5E9), shape = RoundedCornerShape(8.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Router,
+                        contentDescription = "Router",
+                        tint = ColorVerdePrimario,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Column {
+                    Text(
+                        text = "Enlace Wi-Fi ESP32",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1C2833)
+                    )
+                    Text(
+                        text = "Configuración de Red Local / SoftAP",
+                        fontSize = 12.sp,
+                        color = Color(0xFF5D6D7E)
+                    )
+                }
             }
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Text(
-                    text = "Configure la dirección IP asignada al microcontrolador ESP32 en la red local o AP:",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF424242)
+                    text = "Defina la dirección IP asignada al microcontrolador ESP32 (por defecto 192.168.4.1 en modo SoftAP o 192.168.1.150 en LAN):",
+                    fontSize = 11.sp,
+                    color = Color(0xFF5D6D7E)
                 )
 
                 OutlinedTextField(
@@ -88,7 +111,7 @@ fun ConfiguracionIpDialog(
                     label = { Text("Dirección IPv4") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(10.dp)
                 )
 
                 Row(
@@ -105,14 +128,17 @@ fun ConfiguracionIpDialog(
                             }
                         },
                         enabled = !isPinging && ipInput.isNotBlank(),
+                        modifier = Modifier.height(42.dp),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         if (isPinging) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(16.dp),
                                 strokeWidth = 2.dp,
-                                color = Color(0xFF1B5E20)
+                                color = ColorVerdePrimario
                             )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Probando...", fontSize = 12.sp)
                         } else {
                             Icon(
                                 imageVector = Icons.Rounded.NetworkPing,
@@ -120,7 +146,7 @@ fun ConfiguracionIpDialog(
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Test Ping", fontSize = 12.sp)
+                            Text("Probar Ping", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
 
@@ -130,16 +156,16 @@ fun ConfiguracionIpDialog(
                             color = if (pingState == true) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
                                     imageVector = if (pingState == true) Icons.Rounded.CheckCircle else Icons.Rounded.ErrorOutline,
                                     contentDescription = "Estado",
                                     tint = if (pingState == true) Color(0xFF2E7D32) else Color(0xFFC62828),
-                                    modifier = Modifier.size(14.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
-                                Spacer(modifier = Modifier.width(4.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = if (pingState == true) "En Línea" else "Inalcanzable",
                                     fontSize = 11.sp,
@@ -156,18 +182,33 @@ fun ConfiguracionIpDialog(
             Button(
                 onClick = { onGuardar(ipInput.trim()) },
                 enabled = ipInput.isNotBlank(),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20))
+                modifier = Modifier.height(46.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = ColorVerdePrimario)
             ) {
-                Text("Guardar IP")
+                Icon(
+                    imageVector = Icons.Rounded.Check,
+                    contentDescription = "Guardar",
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Guardar IP", fontWeight = FontWeight.Bold, fontSize = 13.sp)
             }
         },
         dismissButton = {
             OutlinedButton(
                 onClick = onDismiss,
-                shape = RoundedCornerShape(8.dp)
+                modifier = Modifier.height(46.dp),
+                shape = RoundedCornerShape(10.dp),
+                border = BorderStroke(1.dp, Color(0xFFB0BEC5))
             ) {
-                Text("Cerrar")
+                Icon(
+                    imageVector = Icons.Rounded.Close,
+                    contentDescription = "Cancelar",
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Cerrar", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = Color(0xFF455A64))
             }
         }
     )
