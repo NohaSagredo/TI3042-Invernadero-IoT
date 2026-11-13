@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" width="100%" height="100%" style="background-color: #ffffff; font-family: sans-serif;">
+  <defs>
+    <style>
+      .title-main { font-size: 16px; font-weight: bold; fill: #1b5e20; text-anchor: middle; }
+      .sub-main { font-size: 11px; fill: #475569; text-anchor: middle; }
+      .esp-box { fill: #f0fdf4; stroke: #166534; stroke-width: 2.2; rx: 10; }
+      .esp-title { font-size: 14px; font-weight: bold; fill: #14532d; text-anchor: middle; }
+      .esp-sub { font-size: 10.5px; fill: #15803d; text-anchor: middle; }
+      .esp-tag { font-size: 9.5px; fill: #334155; }
+      .phone-box { fill: #ffffff; stroke: #334155; stroke-width: 1.8; rx: 8; }
+      .phone-hdr-a { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 1.2; rx: 6; }
+      .phone-hdr-b { fill: #e0f2fe; stroke: #0284c7; stroke-width: 1.2; rx: 6; }
+      .phone-hdr-c { fill: #fef3c7; stroke: #d97706; stroke-width: 1.2; rx: 6; }
+      .phone-title { font-size: 12px; font-weight: bold; fill: #0f172a; text-anchor: middle; }
+      .phone-ip { font-size: 10px; font-family: monospace; font-weight: bold; fill: #0284c7; text-anchor: middle; }
+      .phone-desc { font-size: 9.5px; fill: #334155; }
+      .wifi-line-a { stroke: #16a34a; stroke-width: 2.2; stroke-dasharray: 6,4; marker-end: url(#arrow-green); }
+      .wifi-line-b { stroke: #0284c7; stroke-width: 2.2; stroke-dasharray: 6,4; marker-end: url(#arrow-blue); }
+      .wifi-line-c { stroke: #d97706; stroke-width: 2.2; stroke-dasharray: 6,4; marker-end: url(#arrow-amber); }
+      .proto-box { fill: #f8fafc; stroke: #94a3b8; stroke-width: 1; rx: 4; }
+      .proto-text { font-size: 9.5px; font-weight: 600; fill: #0f172a; text-anchor: middle; }
+      .badge-req { font-size: 9px; font-family: monospace; font-weight: bold; fill: #ffffff; }
+      .hw-box { fill: #f1f5f9; stroke: #64748b; stroke-width: 1.2; rx: 6; }
+      .hw-title { font-size: 10px; font-weight: bold; fill: #1e293b; text-anchor: middle; }
+    </style>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#16a34a"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0284c7"/>
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#d97706"/>
+    </marker>
+  </defs>
+
+  <!-- Encabezado General -->
+  <text x="480" y="32" class="title-main">Arquitectura de Interconexión Inalámbrica Multidispositivo (Criterio 2.1.4.7)</text>
+  <text x="480" y="50" class="sub-main">Dos terminales móviles Android interactuando simultáneamente con el nodo IoT ESP32 vía Wi-Fi 802.11 b/g/n</text>
+
+  <!-- NODO CENTRAL: ESP32 SERVER & EDGE AUTONOMY -->
+  <g transform="translate(345, 95)">
+    <rect width="270" height="260" class="esp-box" />
+    <rect x="10" y="10" width="250" height="42" fill="#dcfce7" stroke="#86efac" stroke-width="1" rx="6"/>
+    <text x="135" y="28" class="esp-title">NODO ESP32 INVERNADERO</text>
+    <text x="135" y="44" class="esp-sub">SoftAP: "ESP32_Invernadero_IoT" (IP: 192.168.4.1)</text>
+
+    <!-- Modulos internos ESP32 -->
+    <rect x="15" y="62" width="240" height="60" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" rx="4"/>
+    <text x="25" y="78" class="esp-tag" font-weight="bold">Servidor HTTP Asíncrono (FreeRTOS Core 0):</text>
+    <text x="25" y="93" class="esp-tag">• Pool de 4 sockets TCP no bloqueantes</text>
+    <text x="25" y="108" class="esp-tag">• Timeout socket = 2 s (Protección DoS)</text>
+
+    <rect x="15" y="130" width="240" height="60" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" rx="4"/>
+    <text x="25" y="146" class="esp-tag" font-weight="bold">Lazo Autónomo Biológico (Core 1 - 50 Hz):</text>
+    <text x="25" y="161" class="esp-tag">• Memoria NVS con umbrales del cultivo</text>
+    <text x="25" y="176" class="esp-tag">• Fail-Safe independiente de la red Wi-Fi</text>
+
+    <rect x="15" y="198" width="240" height="50" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" rx="4"/>
+    <text x="25" y="214" class="esp-tag" font-weight="bold">Seguridad y Sanitización:</text>
+    <text x="25" y="229" class="esp-tag">• Nonce + Timestamp (Anti-Replay &lt; 10s)</text>
+    <text x="25" y="241" class="esp-tag">• Sanity Bounds (Rechazo &lt; 10°C o &gt; 40°C)</text>
+  </g>
+
+  <!-- DISPOSITIVO 1: CELULAR A (OPERADOR) A LA IZQUIERDA -->
+  <g transform="translate(30, 110)">
+    <rect width="250" height="230" class="phone-box" />
+    <rect x="8" y="8" width="234" height="42" class="phone-hdr-a"/>
+    <text x="125" y="26" class="phone-title">CELULAR A — OPERADOR</text>
+    <text x="125" y="42" class="phone-ip">IP Asignada: 192.168.4.2</text>
+
+    <!-- Contenido Celular A -->
+    <text x="16" y="72" class="phone-desc" font-weight="bold">Rol Activo: OPERATOR / ADMIN</text>
+    <text x="16" y="92" class="phone-desc">• Controla motores y ventilación</text>
+    <text x="16" y="108" class="phone-desc">• Conmuta rutinas (Tomate / Frutilla)</text>
+    <text x="16" y="124" class="phone-desc">• Envía override manual de compuerta</text>
+
+    <rect x="14" y="140" width="222" height="42" fill="#f0fdf4" stroke="#86efac" stroke-width="1" rx="4"/>
+    <text x="22" y="156" font-size="9" font-family="monospace" font-weight="bold" fill="#15803d">POST /api/actuators</text>
+    <text x="22" y="172" font-size="8.5" fill="#166534">Payload: { servo: 90, fan: 220, nonce: 8392 }</text>
+
+    <rect x="14" y="190" width="222" height="34" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" rx="4"/>
+    <text x="22" y="206" font-size="8.5" font-weight="bold" fill="#334155">Acción Físicamente Verificada:</text>
+    <text x="22" y="218" font-size="8" fill="#64748b">Apertura inmediata de ventana y turbina</text>
+  </g>
+
+  <!-- DISPOSITIVO 2: CELULAR B (AUDITOR) A LA DERECHA -->
+  <g transform="translate(680, 110)">
+    <rect width="250" height="230" class="phone-box" />
+    <rect x="8" y="8" width="234" height="42" class="phone-hdr-b"/>
+    <text x="125" y="26" class="phone-title">CELULAR B — AUDITOR</text>
+    <text x="125" y="42" class="phone-ip">IP Asignada: 192.168.4.3</text>
+
+    <!-- Contenido Celular B -->
+    <text x="16" y="72" class="phone-desc" font-weight="bold">Rol Activo: AUDITOR</text>
+    <text x="16" y="92" class="phone-desc">• Consulta telemetría en tiempo real</text>
+    <text x="16" y="108" class="phone-desc">• Revisa historial cada 5 min (SQLite)</text>
+    <text x="16" y="124" class="phone-desc">• Audita eventos (LOCKOUT, OVERRIDE)</text>
+
+    <rect x="14" y="140" width="222" height="42" fill="#f0f9ff" stroke="#7dd3fc" stroke-width="1" rx="4"/>
+    <text x="22" y="156" font-size="9" font-family="monospace" font-weight="bold" fill="#0284c7">GET /api/telemetry</text>
+    <text x="22" y="172" font-size="8.5" fill="#0369a1">Respuesta: { temp: 24.5, hum: 62, raw: 512 }</text>
+
+    <rect x="14" y="190" width="222" height="34" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" rx="4"/>
+    <text x="22" y="206" font-size="8.5" font-weight="bold" fill="#334155">Acción Físicamente Verificada:</text>
+    <text x="22" y="218" font-size="8" fill="#64748b">Exportación CSV y verificación de auditoría</text>
+  </g>
+
+  <!-- LÍNEAS DE COMUNICACIÓN WI-FI BIDIRECCIONALES -->
+  <!-- Celular A <-> ESP32 -->
+  <line x1="280" y1="200" x2="340" y2="200" class="wifi-line-a" />
+  <g transform="translate(285, 175)">
+    <rect width="52" height="18" fill="#16a34a" rx="3"/>
+    <text x="26" y="12" class="badge-req" text-anchor="middle">Wi-Fi</text>
+  </g>
+
+  <!-- ESP32 <-> Celular B -->
+  <line x1="615" y1="200" x2="675" y2="200" class="wifi-line-b" />
+  <g transform="translate(620, 175)">
+    <rect width="52" height="18" fill="#0284c7" rx="3"/>
+    <text x="26" y="12" class="badge-req" text-anchor="middle">Wi-Fi</text>
+  </g>
+
+  <!-- HARDWARE FÍSICO CONECTADO AL ESP32 (PARTE INFERIOR) -->
+  <g transform="translate(230, 390)">
+    <rect width="500" height="110" class="hw-box" />
+    <text x="250" y="22" class="hw-title">HARDWARE FÍSICO DEL INVERNADERO CONECTADO AL ESP32</text>
+
+    <!-- Sensores -->
+    <rect x="20" y="34" width="215" height="62" fill="#ffffff" stroke="#94a3b8" stroke-width="1" rx="4"/>
+    <text x="127" y="52" font-size="10" font-weight="bold" fill="#1b5e20" text-anchor="middle">Sensores (Entradas GPIO / ADC):</text>
+    <text x="30" y="68" font-size="9" fill="#334155">• DHT22: Temperatura y Humedad Ambiente</text>
+    <text x="30" y="83" font-size="9" fill="#334155">• FC-28 + LM393: Humedad Radicular (Suelo)</text>
+
+    <!-- Actuadores -->
+    <rect x="265" y="34" width="215" height="62" fill="#ffffff" stroke="#94a3b8" stroke-width="1" rx="4"/>
+    <text x="372" y="52" font-size="10" font-weight="bold" fill="#0369a1" text-anchor="middle">Actuadores (Salidas PWM / Relé):</text>
+    <text x="275" y="68" font-size="9" fill="#334155">• Servomotor SG90: Compuerta Batiente (0°-90°)</text>
+    <text x="275" y="83" font-size="9" fill="#334155">• MOSFET IRF520N: Extractor 12V (PWM 0-255)</text>
+
+    <!-- Enlace físico vertical -->
+    <line x1="250" y1="-35" x2="250" y2="0" stroke="#166534" stroke-width="2" stroke-dasharray="3,3"/>
+  </g>
+</svg>
