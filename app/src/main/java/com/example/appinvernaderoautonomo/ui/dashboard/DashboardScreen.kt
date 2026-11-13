@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Air
 import androidx.compose.material.icons.rounded.Autorenew
 import androidx.compose.material.icons.rounded.Bluetooth
@@ -30,6 +32,7 @@ import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.MeetingRoom
 import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material.icons.rounded.Science
 import androidx.compose.material.icons.rounded.Security
@@ -50,7 +53,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -67,6 +74,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import com.example.appinvernaderoautonomo.data.GreenhouseRepository
 import com.example.appinvernaderoautonomo.iot.GreenhouseIotManager
 import com.example.appinvernaderoautonomo.model.ConnectionMode
 import com.example.appinvernaderoautonomo.model.EstadoSuelo
@@ -80,6 +89,7 @@ import com.example.appinvernaderoautonomo.ui.components.PastelArcGauge
 import com.example.appinvernaderoautonomo.ui.components.PastelOdometerText
 import com.example.appinvernaderoautonomo.ui.components.VentiladorMosfetVisualizer
 import com.example.appinvernaderoautonomo.ui.components.pastelBounceClickable
+import com.example.appinvernaderoautonomo.ui.history.HistorialScreen
 import com.example.appinvernaderoautonomo.ui.thresholds.ThresholdDialog
 
 // Paleta cromática intencional en tonos pastel (Granja, Cielo Celeste y Girasoles)
@@ -92,6 +102,16 @@ private val ColorTextoPrincipal = Color(0xFF142C1D)
 private val ColorTextoSecundario = Color(0xFF43604E)
 private val ColorBordeCard = Color(0xFFD8E8DE)
 
+enum class DashboardTab(
+    val titulo: String,
+    val icono: ImageVector
+) {
+    CULTIVO("Cultivo", Icons.Rounded.Eco),
+    ACTUADORES("Actuadores", Icons.Rounded.Tune),
+    CONEXION("Conexión", Icons.Rounded.Sensors),
+    HISTORIAL("Historial", Icons.Rounded.History)
+}
+
 @Composable
 fun DashboardScreen(
     state: InvernaderoState,
@@ -100,10 +120,15 @@ fun DashboardScreen(
     onIrAHistorial: () -> Unit,
     onIrAAuditoria: () -> Unit,
     onCerrarSesion: () -> Unit,
+    onIrAPerfil: () -> Unit = {},
+    onIrAConfiguracion: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    var selectedTab by remember { mutableStateOf(DashboardTab.CULTIVO) }
     var mostrarDialogoUmbrales by remember { mutableStateOf(false) }
     var mostrarDialogoIp by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val repository = remember { GreenhouseRepository.getInstance(context) }
 
     if (mostrarDialogoIp) {
         ConfiguracionIpDialog(
@@ -128,25 +153,108 @@ fun DashboardScreen(
         )
     }
 
+    Scaffold(
+        containerColor = Color.Transparent,
+        bottomBar = {
+            NavigationBar(
+                containerColor = Color(0xF7FFFFFF),
+                tonalElevation = 2.dp,
+                modifier = Modifier.border(BorderStroke(1.dp, ColorBordeCard))
+            ) {
+                DashboardTab.values().forEach { tab ->
+                    val seleccionado = selectedTab == tab
+                    NavigationBarItem(
+                        selected = seleccionado,
+                        onClick = { selectedTab = tab },
+                        icon = {
+                            Icon(
+                                imageVector = tab.icono,
+                                contentDescription = tab.titulo
+                            )
+                        },
+                        label = {
+                            Text(
+                                text = tab.titulo,
+                                fontSize = 11.sp,
+                                fontWeight = if (seleccionado) FontWeight.Bold else FontWeight.Medium
+                            )
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = ColorVerdeOscuro,
+                            selectedTextColor = ColorVerdeOscuro,
+                            indicatorColor = Color(0xFFD8F3DC),
+                            unselectedIconColor = ColorTextoSecundario,
+                            unselectedTextColor = ColorTextoSecundario
+                        )
+                    )
+                }
+            }
+        },
+        modifier = modifier.fillMaxSize()
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            when (selectedTab) {
+                DashboardTab.CULTIVO -> TabCultivo(
+                    state = state,
+                    currentUser = currentUser,
+                    iotManager = iotManager,
+                    onIrAPerfil = onIrAPerfil,
+                    onAbrirDialogoIp = { mostrarDialogoIp = true },
+                    onCerrarSesion = onCerrarSesion
+                )
+                DashboardTab.ACTUADORES -> TabActuadores(
+                    state = state,
+                    currentUser = currentUser,
+                    iotManager = iotManager,
+                    onAbrirCalibracion = { mostrarDialogoUmbrales = true }
+                )
+                DashboardTab.CONEXION -> TabConexion(
+                    state = state,
+                    currentUser = currentUser,
+                    iotManager = iotManager,
+                    onAbrirDialogoIp = { mostrarDialogoIp = true }
+                )
+                DashboardTab.HISTORIAL -> TabHistorial(
+                    repository = repository,
+                    currentUser = currentUser,
+                    onIrAAuditoria = onIrAAuditoria
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TabCultivo(
+    state: InvernaderoState,
+    currentUser: User,
+    iotManager: GreenhouseIotManager,
+    onIrAPerfil: () -> Unit,
+    onAbrirDialogoIp: () -> Unit,
+    onCerrarSesion: () -> Unit
+) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(ColorFondo)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // NIVEL 1: Header de Identidad y Sesión RBAC
         HeaderUsuarioRBAC(
             user = currentUser,
             estaConectado = state.estaConectado,
             ipNodo = state.ipNodoEsp32,
-            onConfigurarIp = { mostrarDialogoIp = true },
+            onConfigurarIp = onAbrirDialogoIp,
             onSimularConexion = { iotManager.alternarSimulacionFalloConexion(currentUser) },
+            onIrAPerfil = onIrAPerfil,
             onCerrarSesion = onCerrarSesion
         )
 
-        // BANNERS DE CONTINGENCIA Y ESTADO OPERATIVO
         if (!state.estaConectado || state.modoFailSafeBorde) {
             BannerFailSafeBorde(
                 perfil = state.rutinaActiva,
@@ -165,10 +273,9 @@ fun DashboardScreen(
             )
         }
 
-        // NIVEL 1: Telemetría Ambiental en Tiempo Real
         EncabezadoSeccion(
             titulo = "TELEMETRÍA AMBIENTAL EN VIVO",
-            subtitulo = "Sensores de campo DHT22 (Clima) y FC-28 (Sustrato)",
+            subtitulo = "Sensores DHT22 (Clima) y FC-28 (Sustrato del suelo)",
             icono = Icons.Rounded.Sensors
         )
 
@@ -205,7 +312,6 @@ fun DashboardScreen(
             )
         }
 
-        // Tarjeta Humedad de Suelo (FC-28)
         TarjetaHumedadSuelo(
             raw = state.humedadSueloRaw,
             estado = state.estadoSuelo,
@@ -213,14 +319,12 @@ fun DashboardScreen(
             estaEnRango = state.estaEnRangoSuelo
         )
 
-        // NIVEL 2: Actuadores Físicos de Mitigación y Cámara de Policarbonato
         EncabezadoSeccion(
-            titulo = "CÁMARA DE POLICARBONATO Y ACTUADORES",
-            subtitulo = "Flujo de ventilación cruzada: compuerta lateral y extractor 12V",
+            titulo = "CÁMARA DE POLICARBONATO EN TIEMPO REAL",
+            subtitulo = "Compuerta lateral batiente y extractor de ventilación cruzada",
             icono = Icons.Rounded.PowerSettingsNew
         )
 
-        // Maqueta Digital en Vivo: Caja Rectangular de Policarbonato
         InvernaderoChamberVisualizer(
             anguloCompuerta = state.anguloVentana,
             velocidadFanPwm = state.velocidadVentiladorPwm,
@@ -229,7 +333,32 @@ fun DashboardScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        // Compuerta Batiente (Servo SG90)
+        TarjetaEstadoEnlace(mensaje = state.ultimoMensaje, estaConectado = state.estaConectado)
+        Spacer(modifier = Modifier.height(12.dp))
+    }
+}
+
+@Composable
+private fun TabActuadores(
+    state: InvernaderoState,
+    currentUser: User,
+    iotManager: GreenhouseIotManager,
+    onAbrirCalibracion: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ColorFondo)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        EncabezadoSeccion(
+            titulo = "VENTILACIÓN Y CLIMATIZACIÓN",
+            subtitulo = "Control de compuerta batiente y extractor 12V",
+            icono = Icons.Rounded.Air
+        )
+
         TarjetaCompuertaServo(
             anguloActual = state.anguloVentana,
             porcentajeAbierto = state.porcentajeVentanaAbierta,
@@ -240,7 +369,6 @@ fun DashboardScreen(
             onPosicionMedia = { iotManager.setManualVentana(45, currentUser) }
         )
 
-        // Extractor de Calor (Ventilador 12V con MOSFET IRF520N)
         TarjetaVentiladorMosfet(
             pwmActual = state.velocidadVentiladorPwm,
             porcentaje = state.porcentajeVentilador,
@@ -252,10 +380,9 @@ fun DashboardScreen(
             onApagar = { iotManager.setManualVentilador(0, currentUser) }
         )
 
-        // NIVEL 3: Rutina Biológica Activa y Calibración
         EncabezadoSeccion(
-            titulo = "REGULACIÓN BIOLÓGICA",
-            subtitulo = "Gestión de perfiles de cultivo y límites microclimáticos",
+            titulo = "PERFILES DE CULTIVO",
+            subtitulo = "Límites ambientales y calibración agronómica",
             icono = Icons.Rounded.Eco
         )
 
@@ -263,17 +390,35 @@ fun DashboardScreen(
             perfilActivo = state.rutinaActiva,
             userRole = currentUser.role,
             onSeleccionarRutina = { perfil -> iotManager.cambiarRutina(perfil, currentUser) },
-            onAbrirCalibracion = { mostrarDialogoUmbrales = true }
+            onAbrirCalibracion = onAbrirCalibracion
         )
 
-        // NIVEL 4: Conectividad y Servicios del Sistema
+        TarjetaEstadoEnlace(mensaje = state.ultimoMensaje, estaConectado = state.estaConectado)
+        Spacer(modifier = Modifier.height(12.dp))
+    }
+}
+
+@Composable
+private fun TabConexion(
+    state: InvernaderoState,
+    currentUser: User,
+    iotManager: GreenhouseIotManager,
+    onAbrirDialogoIp: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ColorFondo)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         EncabezadoSeccion(
-            titulo = "CONECTIVIDAD Y COMUNICACIONES",
-            subtitulo = "Control tri-modal de enlace y notificaciones push en tiempo real",
+            titulo = "MODO DE COMUNICACIÓN",
+            subtitulo = "Selector tri-modal (Simulación, Wi-Fi local o Bluetooth)",
             icono = Icons.Rounded.SettingsRemote
         )
 
-        // CONTROL TRI-MODAL DE CONEXIÓN (Simulación / Wi-Fi / Bluetooth)
         TarjetaSelectorModoConexion(
             modoActual = state.modoConexion,
             onCambiarModo = { nuevoModo ->
@@ -281,30 +426,101 @@ fun DashboardScreen(
             }
         )
 
-        // DETALLE Y ACCIONES DIRECTAS DEL MODO ACTIVO
         TarjetaDetalleModoActivo(
             state = state,
             currentUser = currentUser,
             iotManager = iotManager,
-            onAbrirDialogoIp = { mostrarDialogoIp = true }
+            onAbrirDialogoIp = onAbrirDialogoIp
         )
 
-        // CENTRO DE NOTIFICACIONES PUSH EN TIEMPO REAL
+        EncabezadoSeccion(
+            titulo = "CENTRO DE NOTIFICACIONES PUSH",
+            subtitulo = "Pruebas de alerta acústica y contingencia en tiempo real",
+            icono = Icons.Rounded.NotificationsActive
+        )
+
         TarjetaCentroNotificacionesPush(
             onEnviarPrueba = { iotManager.enviarNotificacionPrueba(currentUser) }
         )
 
-        // NIVEL 5: Acciones de Navegación del Sistema (Botones consistentes)
-        SeccionAccionesNavegacion(
-            role = currentUser.role,
-            onIrAHistorial = onIrAHistorial,
-            onIrAAuditoria = onIrAAuditoria
-        )
-
-        // Barra inferior de estado del enlace
         TarjetaEstadoEnlace(mensaje = state.ultimoMensaje, estaConectado = state.estaConectado)
-
         Spacer(modifier = Modifier.height(12.dp))
+    }
+}
+
+@Composable
+private fun TabHistorial(
+    repository: GreenhouseRepository,
+    currentUser: User,
+    onIrAAuditoria: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ColorFondo)
+    ) {
+        if (currentUser.role.canViewAuditLogs()) {
+            Card(
+                onClick = onIrAAuditoria,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xF7FFFFFF)),
+                border = BorderStroke(1.dp, ColorBordeCard)
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .background(Color(0xFFE0F2FE), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Security,
+                                contentDescription = null,
+                                tint = Color(0xFF0284C7),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "Bitácora de Auditoría",
+                                fontWeight = FontWeight.Bold,
+                                color = ColorTextoPrincipal,
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            Text(
+                                text = "Registro de seguridad, logins y modificaciones",
+                                fontSize = 11.sp,
+                                color = ColorTextoSecundario
+                            )
+                        }
+                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                        contentDescription = "Abrir Auditoría",
+                        tint = ColorTextoSecundario,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+
+        HistorialScreen(
+            repository = repository,
+            onVolver = null,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }
 
@@ -358,6 +574,7 @@ private fun HeaderUsuarioRBAC(
     ipNodo: String,
     onConfigurarIp: () -> Unit,
     onSimularConexion: () -> Unit,
+    onIrAPerfil: () -> Unit,
     onCerrarSesion: () -> Unit
 ) {
     Card(
@@ -376,7 +593,11 @@ private fun HeaderUsuarioRBAC(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { onIrAPerfil() }
+            ) {
                 Text(
                     text = user.fullName,
                     style = MaterialTheme.typography.titleMedium,
@@ -437,6 +658,22 @@ private fun HeaderUsuarioRBAC(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // Botón Perfil de Usuario
+                IconButton(
+                    onClick = onIrAPerfil,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(Color(0xFFE8F5E9), shape = CircleShape)
+                        .border(1.dp, Color(0xFFC8E6C9), CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Person,
+                        contentDescription = "Perfil del Operador",
+                        tint = ColorVerdeOscuro,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
                 // Botón Wi-Fi (Simulador / Estado de enlace)
                 IconButton(
                     onClick = onSimularConexion,
@@ -661,12 +898,27 @@ private fun TarjetaSensor(
                     letterSpacing = 0.4.sp,
                     maxLines = 1
                 )
-                Icon(
-                    imageVector = icono,
-                    contentDescription = titulo,
-                    tint = colorIcono,
-                    modifier = Modifier.size(16.dp)
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = if (estaEnRango) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
+                    ) {
+                        Text(
+                            text = if (estaEnRango) "Estable ~" else "Alerta ▲",
+                            fontSize = 8.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (estaEnRango) Color(0xFF1B5E20) else Color(0xFFC62828),
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = icono,
+                        contentDescription = titulo,
+                        tint = colorIcono,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(4.dp))

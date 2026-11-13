@@ -180,7 +180,7 @@ fun LoginScreen(
             )
 
             Text(
-                text = "HMI de Supervisión y Regulación Biológica • TI3042",
+                text = "Supervisión y Control del Invernadero • TI3042",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFF5D6D7E),
                 textAlign = TextAlign.Center
@@ -280,7 +280,7 @@ fun LoginScreen(
                             password = it
                             errorMessage = null
                         },
-                        label = { Text("Contraseña (PBKDF2)") },
+                        label = { Text("Contraseña") },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Rounded.Lock,

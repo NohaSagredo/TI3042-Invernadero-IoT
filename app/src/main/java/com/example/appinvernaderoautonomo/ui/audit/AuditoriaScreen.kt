@@ -117,12 +117,13 @@ fun AuditoriaScreen(
                         Text(
                             text = "Bitácora de Auditoría",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
+                            fontSize = 18.sp,
+                            color = Color(0xFF142C1D)
                         )
                         Text(
-                            text = "Trazabilidad de Ciberseguridad ISO 27400",
+                            text = "Registro de Eventos y Seguridad Operativa",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFFB3E5FC)
+                            color = Color(0xFF43604E)
                         )
                     }
                 },
@@ -131,7 +132,7 @@ fun AuditoriaScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = "Volver",
-                            tint = Color.White
+                            tint = Color(0xFF1B4D28)
                         )
                     }
                 },
@@ -145,21 +146,23 @@ fun AuditoriaScreen(
                     }) {
                         Icon(
                             imageVector = Icons.Rounded.LockOpen,
-                            contentDescription = "Desbloquear Cuentas Fail-Safe",
-                            tint = Color.White
+                            contentDescription = "Desbloquear Cuentas",
+                            tint = Color(0xFF1B4D28)
                         )
                     }
                     IconButton(onClick = { cargarLogs() }) {
                         Icon(
                             imageVector = Icons.Rounded.Refresh,
                             contentDescription = "Recargar",
-                            tint = Color.White
+                            tint = Color(0xFF1B4D28)
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0284C7),
-                    titleContentColor = Color.White
+                    containerColor = Color(0xF2FFFFFF),
+                    titleContentColor = Color(0xFF142C1D),
+                    navigationIconContentColor = Color(0xFF1B4D28),
+                    actionIconContentColor = Color(0xFF1B4D28)
                 )
             )
         },

@@ -271,6 +271,16 @@ class GreenhouseRepository private constructor(context: Context) {
         list
     }
 
+    suspend fun exportTelemetryToCsv(limit: Int = 100): String = withContext(Dispatchers.IO) {
+        val logs = getRecentTelemetry(limit)
+        val sb = StringBuilder()
+        sb.append("ID,Fecha,Hora,Temperatura_C,Humedad_Ambiente_Pct,Suelo_ADC,Servo_Angulo_Deg,Fan_PWM,Rutina,Modo_Manual\n")
+        for (log in logs) {
+            sb.append("${log.id},\"${log.fechaFormateada}\",\"${log.horaFormateada}\",${log.temperatura},${log.humedadAmbiente},${log.humedadSueloRaw},${log.anguloVentana},${log.velocidadVentiladorPwm},\"${log.rutinaActiva}\",${log.modoManualActivo}\n")
+        }
+        sb.toString()
+    }
+
     suspend fun recordAuditLog(eventType: AuditEventType, details: String, username: String, role: String): Long =
         withContext(Dispatchers.IO) {
             recordAuditLogInternal(eventType, details, username, role)

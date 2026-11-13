@@ -16,9 +16,11 @@ import com.example.appinvernaderoautonomo.iot.GreenhouseIotManager
 import com.example.appinvernaderoautonomo.security.SessionManager
 import com.example.appinvernaderoautonomo.ui.audit.AuditoriaScreen
 import com.example.appinvernaderoautonomo.ui.components.FarmPastelBackground
+import com.example.appinvernaderoautonomo.ui.configuracion.PantallaConfiguracion
 import com.example.appinvernaderoautonomo.ui.dashboard.DashboardScreen
 import com.example.appinvernaderoautonomo.ui.history.HistorialScreen
 import com.example.appinvernaderoautonomo.ui.login.LoginScreen
+import com.example.appinvernaderoautonomo.ui.perfil.PantallaPerfil
 
 @Composable
 fun NavegacionApp(
@@ -80,6 +82,8 @@ fun NavegacionApp(
                         iotManager = iotManager,
                         onIrAHistorial = { navController.navigate("historial") },
                         onIrAAuditoria = { navController.navigate("auditoria") },
+                        onIrAPerfil = { navController.navigate("perfil") },
+                        onIrAConfiguracion = { navController.navigate("configuracion") },
                         onCerrarSesion = {
                             SessionManager.logout()
                             navController.navigate("login") {
@@ -90,7 +94,36 @@ fun NavegacionApp(
                 }
             }
 
-            // Pantalla 3: Historial Cronométrico de Telemetría (Cada 5 min)
+            // Pantalla 3: Perfil del Operador Adaptado
+            composable("perfil") {
+                val user = currentUser
+                if (user == null) {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                } else {
+                    PantallaPerfil(
+                        currentUser = user,
+                        onIrAConfiguracion = { navController.navigate("configuracion") },
+                        onVolver = { navController.popBackStack() },
+                        onCerrarSesion = {
+                            SessionManager.logout()
+                            navController.navigate("login") {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    )
+                }
+            }
+
+            // Pantalla 4: Ajustes del Invernadero Adaptados
+            composable("configuracion") {
+                PantallaConfiguracion(
+                    onVolverAlPerfil = { navController.popBackStack() }
+                )
+            }
+
+            // Pantalla 5: Historial Cronométrico de Telemetría (Cada 5 min)
             composable("historial") {
                 HistorialScreen(
                     repository = repository,
@@ -98,7 +131,7 @@ fun NavegacionApp(
                 )
             }
 
-            // Pantalla 4: Bitácora de Auditoría ISO 27400
+            // Pantalla 6: Bitácora de Auditoría
             composable("auditoria") {
                 val user = currentUser
                 if (user == null || !user.role.canViewAuditLogs()) {

@@ -1,5 +1,6 @@
 package com.example.appinvernaderoautonomo.ui.history
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,15 +18,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Air
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Grass
 import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Thermostat
 import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,21 +46,32 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.appinvernaderoautonomo.data.GreenhouseRepository
 import com.example.appinvernaderoautonomo.model.TelemetryLog
 import com.example.appinvernaderoautonomo.ui.components.PastelSunflowerLoader
+import com.example.appinvernaderoautonomo.ui.theme.PastelBorder
+import com.example.appinvernaderoautonomo.ui.theme.PastelGreenDark
+import com.example.appinvernaderoautonomo.ui.theme.PastelGreenLight
+import com.example.appinvernaderoautonomo.ui.theme.PastelGreenPrimary
+import com.example.appinvernaderoautonomo.ui.theme.PastelSkyPrimary
+import com.example.appinvernaderoautonomo.ui.theme.PastelTextMuted
+import com.example.appinvernaderoautonomo.ui.theme.PastelTextPrimary
+import com.example.appinvernaderoautonomo.ui.theme.PastelTextSecondary
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistorialScreen(
     repository: GreenhouseRepository,
-    onVolver: () -> Unit,
+    onVolver: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     var logs by remember { mutableStateOf<List<TelemetryLog>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
@@ -68,8 +79,22 @@ fun HistorialScreen(
     fun cargarLogs() {
         scope.launch {
             isLoading = true
-            logs = repository.getRecentTelemetry(50)
+            logs = repository.getRecentTelemetry(60)
             isLoading = false
+        }
+    }
+
+    fun exportarCsv() {
+        scope.launch {
+            val csv = repository.exportTelemetryToCsv(100)
+            val sendIntent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, csv)
+                putExtra(Intent.EXTRA_SUBJECT, "Telemetría Invernadero IoT")
+                type = "text/csv"
+            }
+            val shareIntent = Intent.createChooser(sendIntent, "Exportar Telemetría Agronómica (CSV)")
+            context.startActivity(shareIntent)
         }
     }
 
@@ -85,36 +110,48 @@ fun HistorialScreen(
                         Text(
                             text = "Historial de Telemetría",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
+                            fontSize = 18.sp,
+                            color = PastelGreenDark
                         )
                         Text(
                             text = "Muestreo Cronométrico (Cada 5 Minutos)",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFFC8E6C9)
+                            color = PastelTextSecondary
                         )
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onVolver) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = Color.White
-                        )
+                    if (onVolver != null) {
+                        IconButton(onClick = onVolver) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                                contentDescription = "Volver",
+                                tint = PastelGreenDark
+                            )
+                        }
                     }
                 },
                 actions = {
+                    IconButton(onClick = { exportarCsv() }) {
+                        Icon(
+                            imageVector = Icons.Rounded.Share,
+                            contentDescription = "Exportar a CSV",
+                            tint = PastelGreenDark
+                        )
+                    }
                     IconButton(onClick = { cargarLogs() }) {
                         Icon(
                             imageVector = Icons.Rounded.Refresh,
                             contentDescription = "Recargar",
-                            tint = Color.White
+                            tint = PastelGreenDark
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF4CAF50),
-                    titleContentColor = Color.White
+                    containerColor = Color(0xF2FFFFFF),
+                    titleContentColor = PastelGreenDark,
+                    navigationIconContentColor = PastelGreenDark,
+                    actionIconContentColor = PastelGreenDark
                 )
             )
         },
@@ -135,7 +172,7 @@ fun HistorialScreen(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
                         text = "No hay registros de telemetría disponibles.",
-                        color = Color(0xFF757575)
+                        color = PastelTextMuted
                     )
                 }
             } else {
@@ -158,9 +195,12 @@ fun HistorialScreen(
 private fun TarjetaLogTelemetria(log: TelemetryLog) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xF7FFFFFF)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        border = CardDefaults.outlinedCardBorder().copy(
+            brush = SolidColor(PastelBorder)
+        )
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(
@@ -173,20 +213,20 @@ private fun TarjetaLogTelemetria(log: TelemetryLog) {
                         modifier = Modifier
                             .size(8.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF2E7D32))
+                            .background(PastelGreenPrimary)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = log.horaFormateada,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF1F2923)
+                        color = PastelTextPrimary
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "(${log.fechaFormateada.substringBefore(" ")})",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF757575)
+                        color = PastelTextMuted
                     )
                 }
 
@@ -210,7 +250,7 @@ private fun TarjetaLogTelemetria(log: TelemetryLog) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Temp
+                // Temperatura
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Rounded.Thermostat,
@@ -222,7 +262,8 @@ private fun TarjetaLogTelemetria(log: TelemetryLog) {
                     Text(
                         text = "${String.format("%.1f", log.temperatura)} °C",
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        color = PastelTextPrimary
                     )
                 }
 
@@ -231,30 +272,32 @@ private fun TarjetaLogTelemetria(log: TelemetryLog) {
                     Icon(
                         imageVector = Icons.Rounded.WaterDrop,
                         contentDescription = "Hum",
-                        tint = Color(0xFF0288D1),
+                        tint = PastelSkyPrimary,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "${String.format("%.1f", log.humedadAmbiente)} %",
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        color = PastelTextPrimary
                     )
                 }
 
-                // Humedad Suelo
+                // Humedad Suelo (Corregido a Icono Botánico Grass)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Rounded.Air,
+                        imageVector = Icons.Rounded.Grass,
                         contentDescription = "Suelo",
-                        tint = Color(0xFF388E3C),
+                        tint = Color(0xFF2E7D32),
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "Suelo: ${log.humedadSueloRaw}",
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        color = PastelTextPrimary
                     )
                 }
             }
@@ -263,12 +306,13 @@ private fun TarjetaLogTelemetria(log: TelemetryLog) {
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "Ventana: ${log.anguloVentana}° • Extractor: ${log.porcentajeVentilador}% (PWM ${log.velocidadVentiladorPwm})",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF616161)
+                    color = PastelTextSecondary
                 )
 
                 if (log.modoManualActivo) {
