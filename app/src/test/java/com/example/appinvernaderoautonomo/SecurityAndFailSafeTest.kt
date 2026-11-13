@@ -1,10 +1,12 @@
 package com.example.appinvernaderoautonomo
 
+import com.example.appinvernaderoautonomo.model.ConnectionMode
 import com.example.appinvernaderoautonomo.model.EstadoSuelo
 import com.example.appinvernaderoautonomo.model.InvernaderoState
 import com.example.appinvernaderoautonomo.model.PlantProfile
 import com.example.appinvernaderoautonomo.model.Role
 import com.example.appinvernaderoautonomo.model.User
+import com.example.appinvernaderoautonomo.notifications.GreenhouseNotificationHelper
 import com.example.appinvernaderoautonomo.security.FailSafeLockoutManager
 import com.example.appinvernaderoautonomo.security.PasswordHasher
 import com.example.appinvernaderoautonomo.security.SessionManager
@@ -161,5 +163,39 @@ class SecurityAndFailSafeTest {
         val dryState = state.copy(humedadSueloRaw = 950)
         assertEquals(EstadoSuelo.FALTA_AGUA, dryState.estadoSuelo)
         assertFalse("950 ADC debe estar fuera del rango óptimo.", dryState.estaEnRangoSuelo)
+    }
+
+    @Test
+    fun testConnectionMode_TriModalConfigurationAndState() {
+        val modes = ConnectionMode.values()
+        assertEquals("Deben existir exactamente 3 modos de conexión (Simulación, Wi-Fi, Bluetooth).", 3, modes.size)
+
+        val simMode = ConnectionMode.SIMULACION
+        assertEquals("Modo Simulación", simMode.title)
+
+        val wifiMode = ConnectionMode.WIFI
+        assertEquals("Modo Wi-Fi", wifiMode.title)
+
+        val btMode = ConnectionMode.BLUETOOTH
+        assertEquals("Modo Bluetooth", btMode.title)
+
+        val state = InvernaderoState(
+            modoConexion = ConnectionMode.BLUETOOTH,
+            bluetoothConectado = true,
+            bluetoothDeviceName = "ESP32_Invernadero_BT"
+        )
+        assertEquals(ConnectionMode.BLUETOOTH, state.modoConexion)
+        assertTrue(state.bluetoothConectado)
+        assertEquals("ESP32_Invernadero_BT", state.bluetoothDeviceName)
+    }
+
+    @Test
+    fun testGreenhouseNotificationHelper_ConstantsDefined() {
+        assertEquals("greenhouse_iot_alerts_channel", GreenhouseNotificationHelper.CHANNEL_ID)
+        assertEquals(1001, GreenhouseNotificationHelper.NOTIF_ID_TEMP)
+        assertEquals(1002, GreenhouseNotificationHelper.NOTIF_ID_DROUGHT)
+        assertEquals(1003, GreenhouseNotificationHelper.NOTIF_ID_FAILSAFE)
+        assertEquals(1004, GreenhouseNotificationHelper.NOTIF_ID_MODE)
+        assertEquals(1005, GreenhouseNotificationHelper.NOTIF_ID_TEST)
     }
 }

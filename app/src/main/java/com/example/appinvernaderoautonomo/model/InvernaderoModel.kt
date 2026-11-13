@@ -1,5 +1,15 @@
 package com.example.appinvernaderoautonomo.model
 
+enum class ConnectionMode(
+    val title: String,
+    val subtitle: String,
+    val badgeColorHex: Long
+) {
+    SIMULACION("Modo Simulación", "Ambiente de prueba sintético interno", 0xFF6366F1),
+    WIFI("Modo Wi-Fi", "Conexión directa REST/HTTP con nodo ESP32", 0xFF10B981),
+    BLUETOOTH("Modo Bluetooth", "Enlace inalámbrico serial local SPP", 0xFF2563EB)
+}
+
 enum class EstadoSuelo(val titulo: String) {
     SOBRE_REGADA("Sobre regada"),
     OPTIMA("Regada (Óptima)"),
@@ -29,13 +39,17 @@ data class InvernaderoState(
     val velocidadVentiladorPwm: Int = 0,
     val modoManualVentilador: Boolean = false,
     val estaConectado: Boolean = true,
-    val nombreDispositivo: String = "ESP32 Invernadero (Wi-Fi)",
+    val modoConexion: ConnectionMode = ConnectionMode.SIMULACION,
+    val nombreDispositivo: String = "ESP32 Invernadero (Simulado)",
     val ipNodoEsp32: String = "192.168.4.1",
-    val tipoConexion: String = "Wi-Fi Seguro (TLS/WPA2)",
-    val ultimoMensaje: String = "Telemetría recibida vía Wi-Fi",
+    val tipoConexion: String = "Simulación Interna",
+    val ultimoMensaje: String = "Telemetría nominal en Modo Simulación",
     val rutinaActiva: PlantProfile = PlantProfile.PERFIL_TOMATE,
     val modoFailSafeBorde: Boolean = false,
-    val alertaSeguridad: String? = null
+    val alertaSeguridad: String? = null,
+    val bluetoothDeviceName: String = "ESP32_Invernadero_BT",
+    val bluetoothMac: String = "94:B9:7E:8B:12:34",
+    val bluetoothConectado: Boolean = false
 ) {
     val estadoSuelo: EstadoSuelo
         get() = EstadoSuelo.desdeValorRaw(humedadSueloRaw)

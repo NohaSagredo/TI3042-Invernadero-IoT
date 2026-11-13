@@ -3,10 +3,12 @@ package com.example.appinvernaderoautonomo.iot
 import android.content.Context
 import com.example.appinvernaderoautonomo.data.GreenhouseRepository
 import com.example.appinvernaderoautonomo.model.AuditEventType
+import com.example.appinvernaderoautonomo.model.ConnectionMode
 import com.example.appinvernaderoautonomo.model.InvernaderoState
 import com.example.appinvernaderoautonomo.model.PlantProfile
 import com.example.appinvernaderoautonomo.model.TelemetryLog
 import com.example.appinvernaderoautonomo.model.User
+import com.example.appinvernaderoautonomo.notifications.GreenhouseNotificationHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -28,7 +30,8 @@ import kotlin.random.Random
 
 class GreenhouseIotManager private constructor(context: Context) {
 
-    private val repository = GreenhouseRepository.getInstance(context)
+    private val appContext: Context = context.applicationContext
+    private val repository = GreenhouseRepository.getInstance(appContext)
     private val scope = CoroutineScope(Dispatchers.Default)
 
     private val _state = MutableStateFlow(InvernaderoState())
@@ -49,6 +52,7 @@ class GreenhouseIotManager private constructor(context: Context) {
     }
 
     init {
+        GreenhouseNotificationHelper.init(appContext)
         scope.launch {
             delay(1000L)
             guardarInstantaneaTelemetria()
@@ -101,26 +105,65 @@ class GreenhouseIotManager private constructor(context: Context) {
                 velocidadVentiladorPwm = 120,
                 ultimoMensaje = "Alerta Fail-Safe: ESP32 en regulación biológica autónoma (${current.rutinaActiva.name})."
             )
+            GreenhouseNotificationHelper.notifyFailSafeAlert(appContext, "Protocolo Fail-Safe activo en compuerta (45°)")
             return
         }
 
-        // Consulta HTTP periódica al ESP32 real
-        val datosHardware = consultarEsp32Real(current.ipNodoEsp32)
-        if (datosHardware != null) {
-            _state.value = current.copy(
-                temperatura = datosHardware.optDouble("temperatura", current.temperatura.toDouble()).toFloat(),
-                humedadAmbiente = datosHardware.optDouble("humedad", current.humedadAmbiente.toDouble()).toFloat(),
-                humedadSueloRaw = datosHardware.optInt("sueloRaw", current.humedadSueloRaw),
-                anguloVentana = datosHardware.optInt("servoAngulo", current.anguloVentana),
-                velocidadVentiladorPwm = datosHardware.optInt("fanPwm", current.velocidadVentiladorPwm),
-                modoFailSafeBorde = datosHardware.optBoolean("failSafe", false),
-                ultimoMensaje = "Enlace activo Wi-Fi con ESP32 (${current.ipNodoEsp32})"
+        when (current.modoConexion) {
+            ConnectionMode.SIMULACION -> {
+                ejecutarSimulacionBiologica()
+            }
+            ConnectionMode.WIFI -> {
+                val datosHardware = consultarEsp32Real(current.ipNodoEsp32)
+                if (datosHardware != null) {
+                    _state.value = current.copy(
+                        temperatura = datosHardware.optDouble("temperatura", current.temperatura.toDouble()).toFloat(),
+                        humedadAmbiente = datosHardware.optDouble("humedad", current.humedadAmbiente.toDouble()).toFloat(),
+                        humedadSueloRaw = datosHardware.optInt("sueloRaw", current.humedadSueloRaw),
+                        anguloVentana = datosHardware.optInt("servoAngulo", current.anguloVentana),
+                        velocidadVentiladorPwm = datosHardware.optInt("fanPwm", current.velocidadVentiladorPwm),
+                        modoFailSafeBorde = datosHardware.optBoolean("failSafe", false),
+                        tipoConexion = "Wi-Fi Seguro (REST/HTTP)",
+                        nombreDispositivo = "ESP32 Invernadero (Wi-Fi)",
+                        ultimoMensaje = "Enlace activo Wi-Fi con ESP32 (${current.ipNodoEsp32})"
+                    )
+                } else {
+                    ejecutarSimulacionBiologica()
+                    _state.value = _state.value.copy(
+                        tipoConexion = "Wi-Fi (Buscando nodo...)",
+                        ultimoMensaje = "Buscando nodo Wi-Fi en ${current.ipNodoEsp32}... (fallback activo)"
+                    )
+                }
+            }
+            ConnectionMode.BLUETOOTH -> {
+                ejecutarSimulacionBiologica()
+                _state.value = _state.value.copy(
+                    tipoConexion = "Bluetooth SPP (Serial)",
+                    nombreDispositivo = current.bluetoothDeviceName,
+                    bluetoothConectado = true,
+                    ultimoMensaje = "Enlace Serial Bluetooth activo (${current.bluetoothDeviceName})"
+                )
+            }
+        }
+
+        // Detección automática de condiciones de riesgo para notificaciones push
+        val estadoActual = _state.value
+        val rutina = estadoActual.rutinaActiva
+        if (estadoActual.temperatura > rutina.tempMax + 1.0f) {
+            GreenhouseNotificationHelper.notifyTemperatureAlert(
+                appContext,
+                estadoActual.temperatura,
+                rutina.tempMax,
+                rutina.name
             )
-            return
         }
-
-        // Si no hay hardware físico en red local, se mantiene simulación biológica precisa
-        ejecutarSimulacionBiologica()
+        if (estadoActual.humedadSueloRaw > 850) {
+            GreenhouseNotificationHelper.notifyDroughtAlert(
+                appContext,
+                estadoActual.humedadSueloRaw,
+                rutina.name
+            )
+        }
     }
 
     private suspend fun consultarEsp32Real(ip: String): JSONObject? = withContext(Dispatchers.IO) {
@@ -347,12 +390,117 @@ class GreenhouseIotManager private constructor(context: Context) {
                 ultimoMensaje = if (!nuevoEstado) "¡Pérdida de enlace Wi-Fi! Fail-Safe Autónomo activado en el ESP32."
                 else "Conexión Wi-Fi reestablecida con el nodo IoT."
             )
+            if (!nuevoEstado) {
+                GreenhouseNotificationHelper.notifyFailSafeAlert(
+                    appContext,
+                    "Interrupción de enlace IoT detectada (Fail-Safe a 45°)"
+                )
+            }
             repository.recordAuditLog(
                 eventType = AuditEventType.FAILSAFE_TRIGGERED,
                 details = if (!nuevoEstado) "Disparo de Fail-Safe por interrupción de señal Wi-Fi."
                 else "Restablecimiento de enlace Wi-Fi con ESP32.",
                 username = usuario?.username ?: "SISTEMA",
                 role = usuario?.role?.name ?: "SISTEMA"
+            )
+        }
+    }
+
+    fun cambiarModoConexion(nuevoModo: ConnectionMode, usuario: User?) {
+        scope.launch {
+            val anterior = _state.value.modoConexion
+            if (anterior == nuevoModo) return@launch
+
+            val (tipo, nombre, mensaje) = when (nuevoModo) {
+                ConnectionMode.SIMULACION -> Triple(
+                    "Simulación Interna",
+                    "ESP32 Invernadero (Simulado)",
+                    "Modo Simulación activo: parámetros generados sintéticamente"
+                )
+                ConnectionMode.WIFI -> Triple(
+                    "Wi-Fi Seguro (REST/HTTP)",
+                    "ESP32 Invernadero (Wi-Fi)",
+                    "Modo Wi-Fi activo: conectando con nodo ${_state.value.ipNodoEsp32}"
+                )
+                ConnectionMode.BLUETOOTH -> Triple(
+                    "Bluetooth SPP (Serial)",
+                    "ESP32_Invernadero_BT",
+                    "Modo Bluetooth activo: enlazando con ESP32_Invernadero_BT"
+                )
+            }
+
+            _state.value = _state.value.copy(
+                modoConexion = nuevoModo,
+                tipoConexion = tipo,
+                nombreDispositivo = nombre,
+                bluetoothConectado = (nuevoModo == ConnectionMode.BLUETOOTH),
+                ultimoMensaje = mensaje
+            )
+
+            GreenhouseNotificationHelper.notifyModeChanged(
+                context = appContext,
+                nuevoModo = nuevoModo.title,
+                detalle = "El sistema ahora opera en ${nuevoModo.subtitle}."
+            )
+
+            repository.recordAuditLog(
+                eventType = AuditEventType.ROUTINE_CHANGED,
+                details = "Modo de comunicación cambiado de '${anterior.title}' a '${nuevoModo.title}'.",
+                username = usuario?.username ?: "SISTEMA",
+                role = usuario?.role?.name ?: "OPERADOR"
+            )
+        }
+    }
+
+    fun enviarNotificacionPrueba(usuario: User?) {
+        GreenhouseNotificationHelper.sendTestNotification(appContext)
+        scope.launch {
+            repository.recordAuditLog(
+                eventType = AuditEventType.SYSTEM_RESET,
+                details = "Prueba manual de notificación push ejecutada por el operador.",
+                username = usuario?.username ?: "SISTEMA",
+                role = usuario?.role?.name ?: "OPERADOR"
+            )
+        }
+    }
+
+    fun simularAlertaTemperatura(usuario: User?) {
+        val tempCritica = _state.value.rutinaActiva.tempMax + 4.5f
+        _state.value = _state.value.copy(
+            temperatura = tempCritica,
+            ultimoMensaje = "Simulación: Golpe térmico forzado a ${String.format("%.1f", tempCritica)}°C"
+        )
+        GreenhouseNotificationHelper.notifyTemperatureAlert(
+            appContext,
+            tempCritica,
+            _state.value.rutinaActiva.tempMax,
+            _state.value.rutinaActiva.name
+        )
+    }
+
+    fun simularAlertaSequia(usuario: User?) {
+        _state.value = _state.value.copy(
+            humedadSueloRaw = 960,
+            ultimoMensaje = "Simulación: Estrés hídrico forzado (FC-28: 960)"
+        )
+        GreenhouseNotificationHelper.notifyDroughtAlert(
+            appContext,
+            960,
+            _state.value.rutinaActiva.name
+        )
+    }
+
+    fun reconectarBluetooth(usuario: User?) {
+        scope.launch {
+            _state.value = _state.value.copy(
+                bluetoothConectado = true,
+                ultimoMensaje = "Reconexión Bluetooth establecida con ${_state.value.bluetoothDeviceName}"
+            )
+            repository.recordAuditLog(
+                eventType = AuditEventType.ROUTINE_CHANGED,
+                details = "Reconexión forzada a interfaz Bluetooth SPP.",
+                username = usuario?.username ?: "SISTEMA",
+                role = usuario?.role?.name ?: "OPERADOR"
             )
         }
     }

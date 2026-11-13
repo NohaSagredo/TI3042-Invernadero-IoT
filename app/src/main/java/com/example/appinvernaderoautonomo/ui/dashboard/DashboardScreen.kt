@@ -22,14 +22,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Air
 import androidx.compose.material.icons.rounded.Autorenew
+import androidx.compose.material.icons.rounded.Bluetooth
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Eco
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.MeetingRoom
+import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material.icons.rounded.PowerSettingsNew
+import androidx.compose.material.icons.rounded.Science
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Sensors
+import androidx.compose.material.icons.rounded.SettingsRemote
 import androidx.compose.material.icons.rounded.Thermostat
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.WarningAmber
@@ -62,6 +66,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.appinvernaderoautonomo.iot.GreenhouseIotManager
+import com.example.appinvernaderoautonomo.model.ConnectionMode
 import com.example.appinvernaderoautonomo.model.EstadoSuelo
 import com.example.appinvernaderoautonomo.model.InvernaderoState
 import com.example.appinvernaderoautonomo.model.PlantProfile
@@ -131,6 +136,27 @@ fun DashboardScreen(
             onConfigurarIp = { mostrarDialogoIp = true },
             onSimularConexion = { iotManager.alternarSimulacionFalloConexion(currentUser) },
             onCerrarSesion = onCerrarSesion
+        )
+
+        // CONTROL TRI-MODAL DE CONEXIÓN (Simulación / Wi-Fi / Bluetooth)
+        TarjetaSelectorModoConexion(
+            modoActual = state.modoConexion,
+            onCambiarModo = { nuevoModo ->
+                iotManager.cambiarModoConexion(nuevoModo, currentUser)
+            }
+        )
+
+        // DETALLE Y ACCIONES DIRECTAS DEL MODO ACTIVO
+        TarjetaDetalleModoActivo(
+            state = state,
+            currentUser = currentUser,
+            iotManager = iotManager,
+            onAbrirDialogoIp = { mostrarDialogoIp = true }
+        )
+
+        // CENTRO DE NOTIFICACIONES PUSH EN TIEMPO REAL
+        TarjetaCentroNotificacionesPush(
+            onEnviarPrueba = { iotManager.enviarNotificacionPrueba(currentUser) }
         )
 
         // BANNERS DE CONTINGENCIA Y ESTADO OPERATIVO
@@ -1366,6 +1392,380 @@ private fun TarjetaEstadoEnlace(mensaje: String, estaConectado: Boolean) {
                 fontWeight = FontWeight.Medium,
                 color = Color(0xFF37474F)
             )
+        }
+    }
+}
+
+@Composable
+private fun TarjetaSelectorModoConexion(
+    modoActual: ConnectionMode,
+    onCambiarModo: (ConnectionMode) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        border = BorderStroke(1.dp, ColorBordeCard)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.SettingsRemote,
+                    contentDescription = null,
+                    tint = ColorVerdePrimario,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "MODO DE COMUNICACIÓN DEL SISTEMA",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ColorVerdeOscuro,
+                    letterSpacing = 0.5.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ConnectionMode.values().forEach { modo ->
+                    val esSeleccionado = modo == modoActual
+                    val (icono, colorActivo) = when (modo) {
+                        ConnectionMode.SIMULACION -> Icons.Rounded.Science to Color(0xFF5C6BC0)
+                        ConnectionMode.WIFI -> Icons.Rounded.Wifi to ColorVerdePrimario
+                        ConnectionMode.BLUETOOTH -> Icons.Rounded.Bluetooth to Color(0xFF1976D2)
+                    }
+
+                    Surface(
+                        onClick = { onCambiarModo(modo) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (esSeleccionado) colorActivo else Color(0xFFF1F5F2),
+                        border = BorderStroke(
+                            width = 1.dp,
+                            color = if (esSeleccionado) colorActivo else Color(0xFFD4DFD7)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = icono,
+                                contentDescription = modo.title,
+                                tint = if (esSeleccionado) Color.White else ColorTextoPrincipal,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = when (modo) {
+                                    ConnectionMode.SIMULACION -> "Simulación"
+                                    ConnectionMode.WIFI -> "Wi-Fi"
+                                    ConnectionMode.BLUETOOTH -> "Bluetooth"
+                                },
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (esSeleccionado) Color.White else ColorTextoPrincipal,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TarjetaDetalleModoActivo(
+    state: InvernaderoState,
+    currentUser: User,
+    iotManager: GreenhouseIotManager,
+    onAbrirDialogoIp: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        border = BorderStroke(1.dp, ColorBordeCard)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color(state.modoConexion.badgeColorHex)
+                    ) {
+                        Text(
+                            text = state.modoConexion.title.uppercase(),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = state.nombreDispositivo,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = ColorTextoPrincipal
+                    )
+                }
+
+                Surface(
+                    shape = CircleShape,
+                    color = if (state.estaConectado) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .padding(2.dp)
+                            .background(
+                                color = if (state.estaConectado) Color(0xFF2E7D32) else Color(0xFFC62828),
+                                shape = CircleShape
+                            )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = when (state.modoConexion) {
+                    ConnectionMode.SIMULACION ->
+                        "Ambiente sintético activo: ideal para probar respuestas climáticas y límites de cultivo sin depender de hardware físico."
+                    ConnectionMode.WIFI ->
+                        "Conexión TCP/IP mediante solicitudes HTTP GET/POST contra el firmware del ESP32 en la IP local ${state.ipNodoEsp32}."
+                    ConnectionMode.BLUETOOTH ->
+                        "Enlace serial inalámbrico Bluetooth SPP activo con ${state.bluetoothDeviceName} (${state.bluetoothMac})."
+                },
+                fontSize = 11.sp,
+                color = ColorTextoSecundario,
+                lineHeight = 15.sp
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                when (state.modoConexion) {
+                    ConnectionMode.SIMULACION -> {
+                        Button(
+                            onClick = { iotManager.simularAlertaTemperatura(currentUser) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(42.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
+                        ) {
+                            Text(
+                                text = "Simular Calor Crítico",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1
+                            )
+                        }
+
+                        Button(
+                            onClick = { iotManager.simularAlertaSequia(currentUser) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(42.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100)),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
+                        ) {
+                            Text(
+                                text = "Simular Sequía Suelo",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1
+                            )
+                        }
+                    }
+
+                    ConnectionMode.WIFI -> {
+                        Button(
+                            onClick = onAbrirDialogoIp,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(42.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = ColorVerdePrimario),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Tune,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Configurar IP",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1
+                            )
+                        }
+
+                        Button(
+                            onClick = { iotManager.alternarSimulacionFalloConexion(currentUser) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(42.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (state.estaConectado) Color(0xFFD32F2F) else ColorVerdePrimario
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (state.estaConectado) Icons.Rounded.WifiOff else Icons.Rounded.Wifi,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (state.estaConectado) "Forzar Fail-Safe" else "Reconectar Wi-Fi",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1
+                            )
+                        }
+                    }
+
+                    ConnectionMode.BLUETOOTH -> {
+                        Button(
+                            onClick = { iotManager.reconectarBluetooth(currentUser) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(42.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Bluetooth,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Reconectar BT",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1
+                            )
+                        }
+
+                        Button(
+                            onClick = { iotManager.simularAlertaTemperatura(currentUser) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(42.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0288D1)),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
+                        ) {
+                            Text(
+                                text = "Test Datos SPP",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TarjetaCentroNotificacionesPush(
+    onEnviarPrueba: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        border = BorderStroke(1.dp, ColorBordeCard)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.NotificationsActive,
+                    contentDescription = null,
+                    tint = Color(0xFFE65100),
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "SISTEMA DE NOTIFICACIONES PUSH",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFBF360C),
+                    letterSpacing = 0.5.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "Envío automático de notificaciones push prioritarias cuando se superan límites térmicos, falta de humedad radicular o falla del enlace.",
+                fontSize = 11.sp,
+                color = ColorTextoSecundario,
+                lineHeight = 15.sp
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Button(
+                onClick = onEnviarPrueba,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(44.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100)),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.NotificationsActive,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Enviar Notificación Push de Prueba",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }

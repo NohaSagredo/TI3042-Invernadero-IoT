@@ -27,6 +27,7 @@
 #include <Preferences.h>
 #include <DHT.h>
 #include <ESP32Servo.h>
+#include <BluetoothSerial.h>
 
 // --- ASIGNACIÓN DE PINES ---
 #define PIN_DHT22         4
@@ -45,6 +46,7 @@ DHT dht(PIN_DHT22, DHTTYPE);
 Servo servoCompuerta;
 WebServer server(80);
 Preferences preferences;
+BluetoothSerial SerialBT;
 
 // --- ESTRUCTURA DE PERFIL BIOLÓGICO ACTIVO ---
 struct PerfilPlanta {
@@ -122,15 +124,45 @@ void setup() {
   configurarRutasServidor();
   server.begin();
   Serial.println("[HTTP] Servidor Web REST iniciado en puerto 80.");
+
+  // Iniciar Bluetooth Serial SPP
+  SerialBT.begin("ESP32_Invernadero_BT");
+  Serial.println("[BT] Bluetooth Serial SPP iniciado: ESP32_Invernadero_BT");
 }
 
 void loop() {
   server.handleClient();
 
+  // Procesar comandos por enlace Bluetooth Serial SPP
+  if (SerialBT.available()) {
+    String cmd = SerialBT.readStringUntil('\n');
+    cmd.trim();
+    if (cmd.startsWith("CMD:SERVO:")) {
+      int angulo = cmd.substring(10).toInt();
+      servoCompuerta.write(constrain(angulo, 0, 120));
+      servoManualActivo = true;
+      SerialBT.println("OK:SERVO:" + String(angulo));
+    } else if (cmd.startsWith("CMD:FAN:")) {
+      int pwm = cmd.substring(8).toInt();
+      ledcWrite(PIN_MOSFET_FAN, constrain(pwm, 0, 255));
+      fanManualActivo = true;
+      SerialBT.println("OK:FAN:" + String(pwm));
+    } else if (cmd == "CMD:AUTO") {
+      servoManualActivo = false;
+      fanManualActivo = false;
+      SerialBT.println("OK:AUTO");
+    } else if (cmd == "GET:TELEMETRY") {
+      String json = "{\"temperatura\":" + String(tempActual, 1) + ",\"humedad\":" + String(humActual, 1) + ",\"sueloRaw\":" + String(sueloActualRaw) + "}";
+      SerialBT.println(json);
+    }
+  }
+
   unsigned long ahora = millis();
   if (ahora - ultimoMuestreo >= INTERVALO_MUESTREO) {
     ultimoMuestreo = ahora;
     actualizarLazoControl();
+    // Enviar telemetría periódica hacia el canal Bluetooth SPP
+    SerialBT.printf("{\"temperatura\":%.1f,\"humedad\":%.1f,\"sueloRaw\":%d}\n", tempActual, humActual, sueloActualRaw);
   }
 }
 
