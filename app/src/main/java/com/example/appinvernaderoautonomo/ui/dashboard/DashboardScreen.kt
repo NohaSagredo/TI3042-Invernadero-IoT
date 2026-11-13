@@ -89,6 +89,7 @@ import com.example.appinvernaderoautonomo.ui.components.CompuertaVentanaVisualiz
 import com.example.appinvernaderoautonomo.ui.components.InvernaderoChamberVisualizer
 import com.example.appinvernaderoautonomo.ui.components.PastelArcGauge
 import com.example.appinvernaderoautonomo.ui.components.PastelOdometerText
+import com.example.appinvernaderoautonomo.ui.components.SensorHumedadSueloVisualizer
 import com.example.appinvernaderoautonomo.ui.components.VentiladorMosfetVisualizer
 import com.example.appinvernaderoautonomo.ui.components.pastelBounceClickable
 import com.example.appinvernaderoautonomo.ui.history.HistorialScreen
@@ -966,6 +967,15 @@ private fun TarjetaHumedadSuelo(
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Visualizador dinámico vectorial de la sonda FC-28 y módulo LM393
+            SensorHumedadSueloVisualizer(
+                raw = raw,
+                estaEnRango = estaEnRango,
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(modifier = Modifier.height(10.dp))
 
