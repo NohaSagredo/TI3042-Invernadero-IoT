@@ -18,7 +18,7 @@ class GreenhouseDbHelper(context: Context) : SQLiteOpenHelper(
 
     companion object {
         const val DATABASE_NAME = "greenhouse_iot.db"
-        const val DATABASE_VERSION = 1
+        const val DATABASE_VERSION = 2
 
         // Tabla Usuarios
         const val TABLE_USERS = "users"
@@ -141,11 +141,32 @@ class GreenhouseDbHelper(context: Context) : SQLiteOpenHelper(
         onCreate(db)
     }
 
+    override fun onOpen(db: SQLiteDatabase) {
+        super.onOpen(db)
+        asegurarUsuarioVisor(db)
+    }
+
+    private fun asegurarUsuarioVisor(db: SQLiteDatabase) {
+        try {
+            val cursor = db.rawQuery(
+                "SELECT 1 FROM $TABLE_USERS WHERE $COL_USER_USERNAME = ?",
+                arrayOf("pantalla")
+            )
+            val existe = cursor.moveToFirst()
+            cursor.close()
+            if (!existe) {
+                insertarUsuario(db, "pantalla", "pantalla123", Role.VISOR, "Pantalla Invernadero (Visor en Terreno)")
+            }
+        } catch (_: Exception) {
+        }
+    }
+
     private fun precargarDatosIniciales(db: SQLiteDatabase) {
         // 1. Usuarios con PBKDF2 + Salt 128-bit
         insertarUsuario(db, "admin", "admin123", Role.ADMIN, "Rodrigo Peña (Administrador)")
         insertarUsuario(db, "operador", "operador123", Role.OPERATOR, "Sebastián Sandoval (Operador)")
         insertarUsuario(db, "auditor", "auditor123", Role.AUDITOR, "Auditor de Ciberseguridad TI3042")
+        insertarUsuario(db, "pantalla", "pantalla123", Role.VISOR, "Pantalla Invernadero (Visor en Terreno)")
 
         // 2. Perfiles de cultivo agronómicos
         PlantProfile.DEFAULT_PROFILES.forEach { perfil ->

@@ -25,11 +25,13 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Eco
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -148,9 +150,9 @@ fun PantallaPerfil(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = Icons.Rounded.AccountCircle,
+                        imageVector = if (currentUser.role.isReadOnly()) Icons.Rounded.Visibility else Icons.Rounded.AccountCircle,
                         contentDescription = "Avatar de Usuario",
-                        tint = PastelGreenPrimary,
+                        tint = if (currentUser.role.isReadOnly()) Color(0xFF00796B) else PastelGreenPrimary,
                         modifier = Modifier.size(80.dp)
                     )
                 }
@@ -158,12 +160,12 @@ fun PantallaPerfil(
 
             Surface(
                 shape = CircleShape,
-                color = PastelGreenPrimary,
+                color = if (currentUser.role.isReadOnly()) Color(0xFF00796B) else PastelGreenPrimary,
                 modifier = Modifier.size(30.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = Icons.Rounded.Eco,
+                        imageVector = if (currentUser.role.isReadOnly()) Icons.Rounded.Info else Icons.Rounded.Eco,
                         contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(18.dp)
@@ -214,13 +216,14 @@ fun PantallaPerfil(
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = nombreUsuario,
-                    onValueChange = { nombreUsuario = it },
-                    label = { Text("Nombre del Operador") },
+                    onValueChange = { if (!currentUser.role.isReadOnly()) nombreUsuario = it },
+                    readOnly = currentUser.role.isReadOnly(),
+                    label = { Text(if (currentUser.role.isReadOnly()) "Terminal de Visualización" else "Nombre del Operador") },
                     leadingIcon = {
                         Icon(
-                            imageVector = Icons.Rounded.Person,
+                            imageVector = if (currentUser.role.isReadOnly()) Icons.Rounded.Visibility else Icons.Rounded.Person,
                             contentDescription = null,
-                            tint = PastelGreenPrimary
+                            tint = if (currentUser.role.isReadOnly()) Color(0xFF00796B) else PastelGreenPrimary
                         )
                     },
                     singleLine = true,
@@ -271,51 +274,82 @@ fun PantallaPerfil(
                     InteresCheckboxFila(
                         titulo = "Cultivo y Riego (DHT22 y FC-28)",
                         seleccionado = interesCultivo,
+                        habilitado = !currentUser.role.isReadOnly(),
                         onCheckedChange = { interesCultivo = it }
                     )
                     InteresCheckboxFila(
                         titulo = "Ventilación (Servo 90° y Extractor 12V)",
                         seleccionado = interesVentilacion,
+                        habilitado = !currentUser.role.isReadOnly(),
                         onCheckedChange = { interesVentilacion = it }
                     )
                     InteresCheckboxFila(
                         titulo = "Seguridad Operativa y Auditoría",
                         seleccionado = interesSeguridad,
+                        habilitado = !currentUser.role.isReadOnly(),
                         onCheckedChange = { interesSeguridad = it }
                     )
                 }
             }
         }
 
-        // 4. Botón para navegar a la pantalla de configuración del invernadero
-        Button(
-            onClick = onIrAConfiguracion,
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = PastelGreenPrimary),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Settings,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Ajustes del Invernadero",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Icon(
-                imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(18.dp)
-            )
+        // 4. Botón para navegar a la pantalla de configuración del invernadero (o ficha informativa si es Visor)
+        if (currentUser.role.canModifySettings()) {
+            Button(
+                onClick = onIrAConfiguracion,
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = PastelGreenPrimary),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Settings,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Ajustes del Invernadero",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        } else {
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFFE0F2F1),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFB2DFDB)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Info,
+                        contentDescription = null,
+                        tint = Color(0xFF00695C),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Terminal en Terreno: Dispositivo de visualización pasiva para la cámara de cultivo. Parámetros y actuadores protegidos.",
+                        fontSize = 11.5.sp,
+                        color = Color(0xFF004D40),
+                        lineHeight = 16.sp
+                    )
+                }
+            }
         }
 
         // Botón Volver al Dashboard
@@ -341,18 +375,20 @@ fun PantallaPerfil(
 private fun InteresCheckboxFila(
     titulo: String,
     seleccionado: Boolean,
+    habilitado: Boolean = true,
     onCheckedChange: (Boolean) -> Unit
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onCheckedChange(!seleccionado) }
+            .clickable(enabled = habilitado) { onCheckedChange(!seleccionado) }
             .padding(vertical = 4.dp)
     ) {
         Checkbox(
             checked = seleccionado,
             onCheckedChange = onCheckedChange,
+            enabled = habilitado,
             colors = CheckboxDefaults.colors(
                 checkedColor = PastelGreenPrimary,
                 checkmarkColor = Color.White

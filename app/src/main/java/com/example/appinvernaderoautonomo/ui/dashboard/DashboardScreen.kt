@@ -41,6 +41,7 @@ import androidx.compose.material.icons.rounded.Sensors
 import androidx.compose.material.icons.rounded.SettingsRemote
 import androidx.compose.material.icons.rounded.Thermostat
 import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.WarningAmber
 import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material.icons.rounded.Wifi
@@ -274,6 +275,10 @@ private fun TabCultivo(
             )
         }
 
+        if (currentUser.role.isReadOnly()) {
+            BannerPantallaTerreno()
+        }
+
         EncabezadoSeccion(
             titulo = "TELEMETRÍA AMBIENTAL EN VIVO",
             subtitulo = "Sensores DHT22 (Clima) y FC-28 (Sustrato del suelo)",
@@ -422,8 +427,11 @@ private fun TabConexion(
 
         TarjetaSelectorModoConexion(
             modoActual = state.modoConexion,
+            puedeCambiarModo = !currentUser.role.isReadOnly(),
             onCambiarModo = { nuevoModo ->
-                iotManager.cambiarModoConexion(nuevoModo, currentUser)
+                if (!currentUser.role.isReadOnly()) {
+                    iotManager.cambiarModoConexion(nuevoModo, currentUser)
+                }
             }
         )
 
@@ -441,7 +449,8 @@ private fun TabConexion(
         )
 
         TarjetaCentroNotificacionesPush(
-            onEnviarPrueba = { iotManager.enviarNotificacionPrueba(currentUser) }
+            onEnviarPrueba = { iotManager.enviarNotificacionPrueba(currentUser) },
+            puedeEnviar = !currentUser.role.isReadOnly()
         )
 
         TarjetaEstadoEnlace(mensaje = state.ultimoMensaje, estaConectado = state.estaConectado)
@@ -1182,7 +1191,7 @@ private fun TarjetaRutinaCultivo(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Cambio de rutina restringido para el rol Auditor.",
+                        text = if (userRole.isReadOnly()) "Cambio de rutina bloqueado en terminal de terreno." else "Cambio de rutina restringido para el rol ${userRole.displayTitle}.",
                         fontSize = 12.sp,
                         color = Color(0xFF757575)
                     )
@@ -1689,7 +1698,8 @@ private fun TarjetaEstadoEnlace(mensaje: String, estaConectado: Boolean) {
 @Composable
 private fun TarjetaSelectorModoConexion(
     modoActual: ConnectionMode,
-    onCambiarModo: (ConnectionMode) -> Unit
+    onCambiarModo: (ConnectionMode) -> Unit,
+    puedeCambiarModo: Boolean = true
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -1737,7 +1747,9 @@ private fun TarjetaSelectorModoConexion(
                         modifier = Modifier
                             .weight(1f)
                             .height(44.dp)
-                            .pastelBounceClickable { onCambiarModo(modo) },
+                            .pastelBounceClickable(enabled = puedeCambiarModo) {
+                                if (puedeCambiarModo) onCambiarModo(modo)
+                            },
                         shape = RoundedCornerShape(10.dp),
                         color = if (esSeleccionado) colorActivo else Color(0xFFF1F5F2),
                         border = BorderStroke(
@@ -1853,151 +1865,179 @@ private fun TarjetaDetalleModoActivo(
                 lineHeight = 15.sp
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            if (!currentUser.role.isReadOnly()) {
+                Spacer(modifier = Modifier.height(10.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                when (state.modoConexion) {
-                    ConnectionMode.SIMULACION -> {
-                        Button(
-                            onClick = { iotManager.simularAlertaTemperatura(currentUser) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(40.dp),
-                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF87171)),
-                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
-                        ) {
-                            Text(
-                                text = "Simular Calor",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    when (state.modoConexion) {
+                        ConnectionMode.SIMULACION -> {
+                            Button(
+                                onClick = { iotManager.simularAlertaTemperatura(currentUser) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(40.dp),
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF87171)),
+                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
+                            ) {
+                                Text(
+                                    text = "Simular Calor",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+
+                            Button(
+                                onClick = { iotManager.simularAlertaSequia(currentUser) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(40.dp),
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
+                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
+                            ) {
+                                Text(
+                                    text = "Simular Sequía",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
 
-                        Button(
-                            onClick = { iotManager.simularAlertaSequia(currentUser) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(40.dp),
-                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
-                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
-                        ) {
-                            Text(
-                                text = "Simular Sequía",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                        ConnectionMode.WIFI -> {
+                            Button(
+                                onClick = onAbrirDialogoIp,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(40.dp),
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = ColorVerdePrimario),
+                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Tune,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Configurar IP",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+
+                            Button(
+                                onClick = { iotManager.alternarSimulacionFalloConexion(currentUser) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(40.dp),
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (state.estaConectado) Color(0xFFF87171) else ColorVerdePrimario
+                                ),
+                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (state.estaConectado) Icons.Rounded.WifiOff else Icons.Rounded.Wifi,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = if (state.estaConectado) "Fail-Safe" else "Reconectar",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+
+                        ConnectionMode.BLUETOOTH -> {
+                            Button(
+                                onClick = { iotManager.reconectarBluetooth(currentUser) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(40.dp),
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7)),
+                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Bluetooth,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Reconectar",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+
+                            Button(
+                                onClick = { iotManager.simularAlertaTemperatura(currentUser) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(40.dp),
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF38BDF8)),
+                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
+                            ) {
+                                Text(
+                                    text = "Test SPP",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                     }
-
-                    ConnectionMode.WIFI -> {
-                        Button(
-                            onClick = onAbrirDialogoIp,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(40.dp),
-                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = ColorVerdePrimario),
-                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Tune,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Configurar IP",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-
-                        Button(
-                            onClick = { iotManager.alternarSimulacionFalloConexion(currentUser) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(40.dp),
-                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (state.estaConectado) Color(0xFFF87171) else ColorVerdePrimario
-                            ),
-                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (state.estaConectado) Icons.Rounded.WifiOff else Icons.Rounded.Wifi,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = if (state.estaConectado) "Fail-Safe" else "Reconectar",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-
-                    ConnectionMode.BLUETOOTH -> {
-                        Button(
-                            onClick = { iotManager.reconectarBluetooth(currentUser) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(40.dp),
-                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7)),
-                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Bluetooth,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Reconectar",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-
-                        Button(
-                            onClick = { iotManager.simularAlertaTemperatura(currentUser) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(40.dp),
-                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF38BDF8)),
-                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
-                        ) {
-                            Text(
-                                text = "Test SPP",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
+                }
+            } else {
+                Spacer(modifier = Modifier.height(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFFE0F2F1),
+                    border = BorderStroke(1.dp, Color(0xFFB2DFDB)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Visibility,
+                            contentDescription = null,
+                            tint = Color(0xFF00796B),
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Terminal en Terreno: Acciones de red bloqueadas en modo pantalla.",
+                            fontSize = 10.5.sp,
+                            color = Color(0xFF004D40)
+                        )
                     }
                 }
             }
@@ -2007,7 +2047,8 @@ private fun TarjetaDetalleModoActivo(
 
 @Composable
 private fun TarjetaCentroNotificacionesPush(
-    onEnviarPrueba: () -> Unit
+    onEnviarPrueba: () -> Unit,
+    puedeEnviar: Boolean = true
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -2046,28 +2087,80 @@ private fun TarjetaCentroNotificacionesPush(
                 lineHeight = 15.sp
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            if (puedeEnviar) {
+                Spacer(modifier = Modifier.height(10.dp))
 
-            Button(
-                onClick = onEnviarPrueba,
+                Button(
+                    onClick = onEnviarPrueba,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.NotificationsActive,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Enviar Notificación Push de Prueba",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "• Envío de notificaciones activo en canal prioritario para operadores remotos.",
+                    fontSize = 10.5.sp,
+                    color = ColorTextoSecundario
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BannerPantallaTerreno() {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = Color(0xF2E0F2F1),
+        border = BorderStroke(1.dp, Color(0xFF80CBC4)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(44.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
+                    .size(32.dp)
+                    .background(Color(0xFF00796B), CircleShape),
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.NotificationsActive,
+                    imageVector = Icons.Rounded.Visibility,
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp)
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Column {
                 Text(
-                    text = "Enviar Notificación Push de Prueba",
+                    text = "Pantalla de Terreno • Solo Visualización",
+                    fontWeight = FontWeight.Bold,
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
+                    color = Color(0xFF004D40)
+                )
+                Text(
+                    text = "Parámetros en vivo de la cámara • Control y ajustes bloqueados",
+                    fontSize = 10.5.sp,
+                    color = Color(0xFF00695C)
                 )
             }
         }

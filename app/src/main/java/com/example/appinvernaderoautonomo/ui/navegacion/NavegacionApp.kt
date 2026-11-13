@@ -118,9 +118,14 @@ fun NavegacionApp(
 
             // Pantalla 4: Ajustes del Invernadero Adaptados
             composable("configuracion") {
-                PantallaConfiguracion(
-                    onVolverAlPerfil = { navController.popBackStack() }
-                )
+                val user = currentUser
+                if (user == null || !user.role.canModifySettings()) {
+                    navController.popBackStack()
+                } else {
+                    PantallaConfiguracion(
+                        onVolverAlPerfil = { navController.popBackStack() }
+                    )
+                }
             }
 
             // Pantalla 5: Historial Cronométrico de Telemetría (Cada 5 min)

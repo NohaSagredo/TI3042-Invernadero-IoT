@@ -103,6 +103,14 @@ class SecurityAndFailSafeTest {
         assertFalse("Auditor NO debe forzar actuadores físicos.", Role.AUDITOR.canOverrideActuators())
         assertFalse("Auditor NO debe conmutar rutinas operativas.", Role.AUDITOR.canChangeRoutines())
         assertTrue("Auditor SÍ debe tener acceso a la bitácora de auditoría ISO.", Role.AUDITOR.canViewAuditLogs())
+
+        // Visor / Pantalla en Terreno (Kiosko)
+        assertFalse("Visor NO debe calibrar umbrales.", Role.VISOR.canEditThresholds())
+        assertFalse("Visor NO debe forzar actuadores.", Role.VISOR.canOverrideActuators())
+        assertFalse("Visor NO debe conmutar rutinas.", Role.VISOR.canChangeRoutines())
+        assertFalse("Visor NO debe ver bitácora de auditoría.", Role.VISOR.canViewAuditLogs())
+        assertFalse("Visor NO debe modificar ajustes.", Role.VISOR.canModifySettings())
+        assertTrue("Visor es un rol de solo lectura.", Role.VISOR.isReadOnly())
     }
 
     @Test

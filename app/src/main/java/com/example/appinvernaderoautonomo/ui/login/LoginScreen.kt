@@ -381,51 +381,75 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                BotonCredencialDemo(
-                    titulo = "Admin",
-                    subtitulo = "admin123",
-                    colorFondo = Color(0xFFE8F5E9),
-                    colorBorde = Color(0xFFC8E6C9),
-                    colorTexto = Color(0xFF1B5E20),
-                    onClick = {
-                        username = "admin"
-                        password = "admin123"
-                        errorMessage = null
-                    },
-                    modifier = Modifier.weight(1f)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    BotonCredencialDemo(
+                        titulo = "Admin",
+                        subtitulo = "admin123",
+                        colorFondo = Color(0xFFE8F5E9),
+                        colorBorde = Color(0xFFC8E6C9),
+                        colorTexto = Color(0xFF1B5E20),
+                        onClick = {
+                            username = "admin"
+                            password = "admin123"
+                            errorMessage = null
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
 
-                BotonCredencialDemo(
-                    titulo = "Operador",
-                    subtitulo = "operador123",
-                    colorFondo = Color(0xFFF1F8E9),
-                    colorBorde = Color(0xFFDCEDC8),
-                    colorTexto = Color(0xFF33691E),
-                    onClick = {
-                        username = "operador"
-                        password = "operador123"
-                        errorMessage = null
-                    },
-                    modifier = Modifier.weight(1f)
-                )
+                    BotonCredencialDemo(
+                        titulo = "Operador",
+                        subtitulo = "operador123",
+                        colorFondo = Color(0xFFF1F8E9),
+                        colorBorde = Color(0xFFDCEDC8),
+                        colorTexto = Color(0xFF33691E),
+                        onClick = {
+                            username = "operador"
+                            password = "operador123"
+                            errorMessage = null
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
 
-                BotonCredencialDemo(
-                    titulo = "Auditor",
-                    subtitulo = "auditor123",
-                    colorFondo = Color(0xFFE1F5FE),
-                    colorBorde = Color(0xFFB3E5FC),
-                    colorTexto = Color(0xFF01579B),
-                    onClick = {
-                        username = "auditor"
-                        password = "auditor123"
-                        errorMessage = null
-                    },
-                    modifier = Modifier.weight(1f)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    BotonCredencialDemo(
+                        titulo = "Auditor",
+                        subtitulo = "auditor123",
+                        colorFondo = Color(0xFFE1F5FE),
+                        colorBorde = Color(0xFFB3E5FC),
+                        colorTexto = Color(0xFF01579B),
+                        onClick = {
+                            username = "auditor"
+                            password = "auditor123"
+                            errorMessage = null
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    BotonCredencialDemo(
+                        titulo = "Pantalla (Visor)",
+                        subtitulo = "pantalla123",
+                        colorFondo = Color(0xFFE0F2F1),
+                        colorBorde = Color(0xFFB2DFDB),
+                        colorTexto = Color(0xFF00695C),
+                        onClick = {
+                            username = "pantalla"
+                            password = "pantalla123"
+                            errorMessage = null
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(18.dp))
