@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.appinvernaderoautonomo.data.GreenhouseRepository
 import com.example.appinvernaderoautonomo.model.TelemetryLog
+import com.example.appinvernaderoautonomo.ui.components.PastelSunflowerLoader
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -128,7 +129,7 @@ fun HistorialScreen(
         ) {
             if (isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Color(0xFF4CAF50))
+                    PastelSunflowerLoader(mensaje = "Recuperando telemetría del cultivo...")
                 }
             } else if (logs.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

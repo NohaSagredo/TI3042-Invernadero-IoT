@@ -39,6 +39,12 @@ fun FarmPastelBackground(
     modifier: Modifier = Modifier,
     mostrarCapaFrosted: Boolean = true
 ) {
+    val horaActual = androidx.compose.runtime.remember {
+        java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+    }
+    val esAtardecer = horaActual in 18..20
+    val esNoche = horaActual >= 21 || horaActual < 7
+
     val transition = rememberInfiniteTransition(label = "FarmPastelAnimations")
 
     // Animación de nubes a la deriva (capa lenta y capa media)
@@ -62,7 +68,7 @@ fun FarmPastelBackground(
         label = "CloudDrift2"
     )
 
-    // Pulsación suave de la luz solar
+    // Pulsación suave de la luz solar o lunar
     val sunPulse by transition.animateFloat(
         initialValue = 0.95f,
         targetValue = 1.06f,
@@ -99,71 +105,111 @@ fun FarmPastelBackground(
         val w = size.width
         val h = size.height
 
-        // 1. CIELO CELESTE PASTEL CON GRADIENTE DE HORIZONTE
+        // 1. CIELO DINÁMICO ADAPTATIVO A LA HORA DEL DÍA
+        val coloresCielo = when {
+            esNoche -> listOf(
+                Color(0xFF1E293B), // Noche pastel azul marino
+                Color(0xFF334155),
+                Color(0xFF475569),
+                Color(0xFF1B3D2B)  // Horizonte oscuro sobre las colinas
+            )
+            esAtardecer -> listOf(
+                Color(0xFFF472B6), // Rosa pastel crepúsculo
+                Color(0xFFFB7185), // Coral suave
+                Color(0xFFFED7AA), // Durazno cálido
+                Color(0xFFFEF08A)  // Resplandor dorado de atardecer
+            )
+            else -> listOf(
+                Color(0xFFBAE6FD), // Celeste pastel cielo alto
+                Color(0xFFD0F0FD), // Celeste claro medio
+                Color(0xFFE0F2FE), // Celeste brisa
+                Color(0xFFFEF3C7)  // Horizonte cálido de amanecer
+            )
+        }
+
         drawRect(
             brush = Brush.verticalGradient(
-                colors = listOf(
-                    Color(0xFFBAE6FD), // Celeste pastel cielo alto
-                    Color(0xFFD0F0FD), // Celeste claro medio
-                    Color(0xFFE0F2FE), // Celeste brisa
-                    Color(0xFFFEF3C7)  // Horizonte cálido de amanecer
-                ),
+                colors = coloresCielo,
                 startY = 0f,
                 endY = h * 0.58f
             ),
             size = Size(w, h)
         )
 
-        // 2. SOL PASTEL RADIANTE CON RESPLANDOR
-        val sunCenter = Offset(w * 0.82f, h * 0.11f)
-        val sunBaseRadius = w * 0.085f * sunPulse
+        // 2. ASTRO CELESTE (SOL DE DÍA/ATARDECER O LUNA CRECIENTE DE NOCHE)
+        val astroCenter = Offset(w * 0.82f, h * (if (esAtardecer) 0.18f else 0.11f))
+        val astroBaseRadius = w * 0.085f * sunPulse
 
-        // Halo difuso
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    Color(0x80FDE047),
-                    Color(0x30FEF08A),
-                    Color.Transparent
+        if (esNoche) {
+            // Luna creciente apacible pastel
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(Color(0x50FEF9C3), Color.Transparent),
+                    center = astroCenter,
+                    radius = astroBaseRadius * 2f
                 ),
-                center = sunCenter,
-                radius = sunBaseRadius * 2.3f
-            ),
-            radius = sunBaseRadius * 2.3f,
-            center = sunCenter
-        )
+                radius = astroBaseRadius * 2f,
+                center = astroCenter
+            )
+            drawCircle(
+                color = Color(0xFFFEF9C3),
+                radius = astroBaseRadius * 0.9f,
+                center = astroCenter
+            )
+            // Sombra recortada para formar la medialuna
+            drawCircle(
+                color = Color(0xFF1E293B),
+                radius = astroBaseRadius * 0.78f,
+                center = Offset(astroCenter.x - (astroBaseRadius * 0.35f), astroCenter.y - (astroBaseRadius * 0.15f))
+            )
+        } else {
+            // Sol pastel radiante
+            val haloColor = if (esAtardecer) Color(0x60FB7185) else Color(0x80FDE047)
+            val coreColor = if (esAtardecer) Color(0xFFFDBA74) else Color(0xFFFEF08A)
 
-        // Disco solar central
-        drawCircle(
-            color = Color(0xFFFEF08A),
-            radius = sunBaseRadius,
-            center = sunCenter
-        )
-        drawCircle(
-            color = Color(0xFFFDE047),
-            radius = sunBaseRadius,
-            center = sunCenter,
-            style = Stroke(width = 2.5f)
-        )
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(haloColor, Color(0x20FEF08A), Color.Transparent),
+                    center = astroCenter,
+                    radius = astroBaseRadius * 2.3f
+                ),
+                radius = astroBaseRadius * 2.3f,
+                center = astroCenter
+            )
+            drawCircle(
+                color = coreColor,
+                radius = astroBaseRadius,
+                center = astroCenter
+            )
+        }
 
         // 3. NUBES FLOTANTES PASTEL
+        val cloudTint = if (esAtardecer) Color(0xFFFEE2E2) else if (esNoche) Color(0x9094A3B8) else Color(0xE8FFFFFF)
         drawCloud(
             x = ((cloudProgress1 * (w + 240f)) - 120f),
             y = h * 0.08f,
-            scale = 0.95f
+            scale = 0.95f,
+            colorTint = cloudTint
         )
         drawCloud(
             x = (((cloudProgress2 * (w + 280f)) + w * 0.45f) % (w + 280f) - 140f),
             y = h * 0.17f,
-            scale = 0.75f
+            scale = 0.75f,
+            colorTint = cloudTint
         )
         drawCloud(
             x = (((cloudProgress1 * 0.7f * (w + 260f)) + w * 0.78f) % (w + 260f) - 130f),
             y = h * 0.23f,
-            scale = 0.85f
+            scale = 0.85f,
+            colorTint = cloudTint
         )
 
-        // 4. COLINAS DISTANTES (VERDE SALVIA Y MENTA PASTEL)
+        // 4. COLINAS DISTANTES (SALVIA / TONALIDAD DEL MOMENTO)
+        val colorColinaLejana = when {
+            esNoche -> Color(0xFF2A4837)
+            esAtardecer -> Color(0xFFB5D8B5)
+            else -> Color(0xFFC7E9C0)
+        }
         val pathColinaLejana = Path().apply {
             moveTo(0f, h * 0.38f)
             cubicTo(
@@ -175,12 +221,15 @@ fun FarmPastelBackground(
             lineTo(0f, h)
             close()
         }
-        drawPath(path = pathColinaLejana, color = Color(0xFFC7E9C0)) // Verde salvia distante
-
-        // Fila de arbolitos distantes en la colina
+        drawPath(path = pathColinaLejana, color = colorColinaLejana)
         drawDistantTrees(w = w, h = h)
 
         // 5. COLINA MEDIA CON LA GRANJA Y EL MOLINO
+        val colorColinaMedia = when {
+            esNoche -> Color(0xFF203B2B)
+            esAtardecer -> Color(0xFF8FB88E)
+            else -> Color(0xFFA1D99B)
+        }
         val pathColinaMedia = Path().apply {
             moveTo(0f, h * 0.45f)
             cubicTo(
@@ -192,7 +241,7 @@ fun FarmPastelBackground(
             lineTo(0f, h)
             close()
         }
-        drawPath(path = pathColinaMedia, color = Color(0xFFA1D99B)) // Verde pradera pastel
+        drawPath(path = pathColinaMedia, color = colorColinaMedia)
 
         // DIBUJO DE LA GRANJA RÚSTICA (Barn + Silo)
         drawGranjaBarn(
@@ -209,7 +258,12 @@ fun FarmPastelBackground(
             scale = w / 420f
         )
 
-        // 6. COLINA PRINCIPAL DE PRIMER PLANO (PASTEL PRADERA VERDE)
+        // 6. COLINA PRINCIPAL DE PRIMER PLANO (PRADERA VERDE)
+        val colorColinaFrontal = when {
+            esNoche -> Color(0xFF1A3323)
+            esAtardecer -> Color(0xFF6A996D)
+            else -> Color(0xFF74C69D)
+        }
         val pathColinaFrontal = Path().apply {
             moveTo(0f, h * 0.58f)
             cubicTo(
@@ -221,7 +275,7 @@ fun FarmPastelBackground(
             lineTo(0f, h)
             close()
         }
-        drawPath(path = pathColinaFrontal, color = Color(0xFF74C69D)) // Verde pasto menta
+        drawPath(path = pathColinaFrontal, color = colorColinaFrontal)
 
         // 7. CAMPO DE GIRASOLES ANIMADOS MECEndOSE AL VIENTO
         drawCampoGirasoles(
@@ -232,13 +286,26 @@ fun FarmPastelBackground(
 
         // 8. CAPA DE CRISTAL ESMERILADO PASTEL (FROSTED SCRIM)
         if (mostrarCapaFrosted) {
+            val scrimColors = when {
+                esNoche -> listOf(
+                    Color(0xD81E293B),
+                    Color(0xE816221A),
+                    Color(0xEE121E15)
+                )
+                esAtardecer -> listOf(
+                    Color(0xD0FFF1F2),
+                    Color(0xE8FFF7ED),
+                    Color(0xEEF8FAF5)
+                )
+                else -> listOf(
+                    Color(0xD0F0F9FF),
+                    Color(0xE8F7FBF8),
+                    Color(0xEEF1F8F3)
+                )
+            }
             drawRect(
                 brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xD0F0F9FF), // Tinte celeste pastel arriba (semitransparente)
-                        Color(0xE8F7FBF8), // Tinte menta suave en contenido central
-                        Color(0xEEF1F8F3)  // Tinte verde pradera suave al fondo
-                    ),
+                    colors = scrimColors,
                     startY = 0f,
                     endY = h
                 ),
@@ -251,9 +318,9 @@ fun FarmPastelBackground(
 /**
  * Dibuja una nube esponjosa compuesta por múltiples arcos suaves pastel.
  */
-private fun DrawScope.drawCloud(x: Float, y: Float, scale: Float) {
-    val cloudColor = Color(0xE8FFFFFF)
-    val shadowColor = Color(0x30BAE6FD)
+private fun DrawScope.drawCloud(x: Float, y: Float, scale: Float, colorTint: Color = Color(0xE8FFFFFF)) {
+    val cloudColor = colorTint
+    val shadowColor = Color(0x25BAE6FD)
     val r = 24f * scale
 
     // Sombra sutil de la nube

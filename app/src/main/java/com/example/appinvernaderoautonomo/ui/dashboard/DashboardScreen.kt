@@ -72,6 +72,11 @@ import com.example.appinvernaderoautonomo.model.InvernaderoState
 import com.example.appinvernaderoautonomo.model.PlantProfile
 import com.example.appinvernaderoautonomo.model.Role
 import com.example.appinvernaderoautonomo.model.User
+import com.example.appinvernaderoautonomo.ui.components.CompuertaVentanaVisualizer
+import com.example.appinvernaderoautonomo.ui.components.PastelArcGauge
+import com.example.appinvernaderoautonomo.ui.components.PastelOdometerText
+import com.example.appinvernaderoautonomo.ui.components.VentiladorMosfetVisualizer
+import com.example.appinvernaderoautonomo.ui.components.pastelBounceClickable
 import com.example.appinvernaderoautonomo.ui.thresholds.ThresholdDialog
 
 // Paleta cromática intencional en tonos pastel (Granja, Cielo Celeste y Girasoles)
@@ -192,20 +197,28 @@ fun DashboardScreen(
             TarjetaSensor(
                 titulo = "TEMPERATURA",
                 valor = "${String.format("%.1f", state.temperatura)} °C",
+                valorNum = state.temperatura,
+                minVal = 10f,
+                maxVal = 40f,
+                unidad = "°C",
                 rangoEsperado = state.rutinaActiva.tempRangeText,
                 estaEnRango = state.estaEnRangoTemperatura,
                 icono = Icons.Rounded.Thermostat,
-                colorIcono = if (state.estaEnRangoTemperatura) Color(0xFF2E7D32) else Color(0xFFD32F2F),
+                colorIcono = if (state.estaEnRangoTemperatura) Color(0xFF4CAF50) else Color(0xFFF87171),
                 modifier = Modifier.weight(1f)
             )
 
             TarjetaSensor(
                 titulo = "HUMEDAD AIRE",
                 valor = "${String.format("%.1f", state.humedadAmbiente)} %",
+                valorNum = state.humedadAmbiente,
+                minVal = 20f,
+                maxVal = 100f,
+                unidad = "% HR",
                 rangoEsperado = state.rutinaActiva.humidityRangeText,
                 estaEnRango = state.estaEnRangoHumedad,
                 icono = Icons.Rounded.WaterDrop,
-                colorIcono = if (state.estaEnRangoHumedad) Color(0xFF0288D1) else Color(0xFFD32F2F),
+                colorIcono = if (state.estaEnRangoHumedad) Color(0xFF38BDF8) else Color(0xFFF87171),
                 modifier = Modifier.weight(1f)
             )
         }
@@ -591,6 +604,10 @@ private fun BannerModoManual(
 private fun TarjetaSensor(
     titulo: String,
     valor: String,
+    valorNum: Float,
+    minVal: Float,
+    maxVal: Float,
+    unidad: String,
     rangoEsperado: String,
     estaEnRango: Boolean,
     icono: ImageVector,
@@ -609,7 +626,8 @@ private fun TarjetaSensor(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp)
+                .padding(14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -627,22 +645,24 @@ private fun TarjetaSensor(
                     imageVector = icono,
                     contentDescription = titulo,
                     tint = colorIcono,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(18.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
-            Text(
-                text = valor,
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontFeatureSettings = "tnum"
-                ),
-                fontWeight = FontWeight.Bold,
-                color = ColorTextoPrincipal
+            // Tacómetro semicircular con odómetro integrado
+            PastelArcGauge(
+                valor = valorNum,
+                minimo = minVal,
+                maximo = maxVal,
+                unidad = unidad,
+                estaEnRango = estaEnRango,
+                colorArco = colorIcono,
+                modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Surface(
                 shape = RoundedCornerShape(6.dp),
@@ -730,14 +750,25 @@ private fun TarjetaHumedadSuelo(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "ADC: $raw / 1023",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontFeatureSettings = "tnum"
-                    ),
-                    fontWeight = FontWeight.Bold,
-                    color = ColorTextoPrincipal
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "ADC: ",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = ColorTextoPrincipal
+                    )
+                    PastelOdometerText(
+                        value = "$raw",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ColorTextoPrincipal
+                    )
+                    Text(
+                        text = " / 1023",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ColorTextoSecundario
+                    )
+                }
                 Text(
                     text = "Rango Seguro: $rangoEsperado",
                     style = MaterialTheme.typography.bodySmall,
@@ -1086,6 +1117,14 @@ private fun TarjetaCompuertaServo(
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            // Visualizador dinámico en vivo de la compuerta y brisa
+            CompuertaVentanaVisualizer(
+                angulo = anguloActual,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
             // Métrica de Ángulo
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1215,6 +1254,14 @@ private fun TarjetaVentiladorMosfet(
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            // Visualizador dinámico de aspas giratorias según potencia PWM
+            VentiladorMosfetVisualizer(
+                pwm = pwmActual,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
             // Métrica de Potencia
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1294,15 +1341,15 @@ private fun BotonControlActuador(
     colorActivo: Color = ColorVerdePrimario
 ) {
     Surface(
-        onClick = onClick,
         shape = RoundedCornerShape(8.dp),
         color = if (esActivo) colorActivo else Color(0xFFF1F5F2),
-        border = CardDefaults.outlinedCardBorder().copy(
-            brush = androidx.compose.ui.graphics.SolidColor(
-                if (esActivo) colorActivo else Color(0xFFD0DCD4)
-            )
+        border = BorderStroke(
+            1.dp,
+            if (esActivo) colorActivo else Color(0xFFD0DCD4)
         ),
-        modifier = modifier.height(42.dp)
+        modifier = modifier
+            .height(42.dp)
+            .pastelBounceClickable(onClick = onClick)
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -1332,7 +1379,8 @@ private fun SeccionAccionesNavegacion(
             onClick = onIrAHistorial,
             modifier = Modifier
                 .weight(1f)
-                .height(48.dp),
+                .height(48.dp)
+                .pastelBounceClickable(onClick = onIrAHistorial),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = ColorVerdePrimario),
             elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
@@ -1351,7 +1399,8 @@ private fun SeccionAccionesNavegacion(
                 onClick = onIrAAuditoria,
                 modifier = Modifier
                     .weight(1f)
-                    .height(48.dp),
+                    .height(48.dp)
+                    .pastelBounceClickable(onClick = onIrAAuditoria),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7)),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
@@ -1445,10 +1494,10 @@ private fun TarjetaSelectorModoConexion(
                     }
 
                     Surface(
-                        onClick = { onCambiarModo(modo) },
                         modifier = Modifier
                             .weight(1f)
-                            .height(44.dp),
+                            .height(44.dp)
+                            .pastelBounceClickable { onCambiarModo(modo) },
                         shape = RoundedCornerShape(10.dp),
                         color = if (esSeleccionado) colorActivo else Color(0xFFF1F5F2),
                         border = BorderStroke(
@@ -1750,7 +1799,8 @@ private fun TarjetaCentroNotificacionesPush(
                 onClick = onEnviarPrueba,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(44.dp),
+                    .height(44.dp)
+                    .pastelBounceClickable(onClick = onEnviarPrueba),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)

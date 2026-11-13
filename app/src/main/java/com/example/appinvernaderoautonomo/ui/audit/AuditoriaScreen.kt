@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import com.example.appinvernaderoautonomo.data.GreenhouseRepository
 import com.example.appinvernaderoautonomo.model.AuditEventType
 import com.example.appinvernaderoautonomo.model.AuditLog
+import com.example.appinvernaderoautonomo.ui.components.PastelSunflowerLoader
 import kotlinx.coroutines.launch
 
 enum class FiltroAuditoria(val titulo: String) {
@@ -204,7 +205,7 @@ fun AuditoriaScreen(
             ) {
                 if (isLoading) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = Color(0xFF0277BD))
+                        PastelSunflowerLoader(mensaje = "Verificando bitácora de eventos...")
                     }
                 } else if (logsFiltrados.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -237,8 +238,9 @@ private fun TarjetaLogAuditoria(log: AuditLog) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        colors = CardDefaults.cardColors(containerColor = Color(0xF2FFFFFF)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD8E8DE))
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(
