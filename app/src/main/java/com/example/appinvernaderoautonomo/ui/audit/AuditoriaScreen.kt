@@ -188,13 +188,17 @@ fun AuditoriaScreen(
                     Surface(
                         onClick = { filtroSeleccionado = filtro },
                         shape = RoundedCornerShape(8.dp),
-                        color = if (seleccionado) Color(0xFF0277BD) else Color(0xFFE1F5FE)
+                        color = if (seleccionado) Color(0xFF1B4D28) else Color(0xF7FFFFFF),
+                        border = androidx.compose.foundation.BorderStroke(
+                            width = 1.dp,
+                            color = if (seleccionado) Color(0xFF1B4D28) else Color(0xFFD8E8DE)
+                        )
                     ) {
                         Text(
                             text = filtro.titulo,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = if (seleccionado) Color.White else Color(0xFF0277BD),
+                            color = if (seleccionado) Color.White else Color(0xFF142C1D),
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                         )
                     }

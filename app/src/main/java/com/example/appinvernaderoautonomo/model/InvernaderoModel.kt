@@ -5,9 +5,9 @@ enum class ConnectionMode(
     val subtitle: String,
     val badgeColorHex: Long
 ) {
-    SIMULACION("Modo Simulación", "Ambiente de prueba sintético interno", 0xFF6366F1),
-    WIFI("Modo Wi-Fi", "Conexión directa REST/HTTP con nodo ESP32", 0xFF10B981),
-    BLUETOOTH("Modo Bluetooth", "Enlace inalámbrico serial local SPP", 0xFF2563EB)
+    SIMULACION("Modo Simulación", "Ambiente de prueba sintético interno", 0xFF0D9488),
+    WIFI("Modo Wi-Fi", "Conexión directa REST/HTTP con nodo ESP32", 0xFF1B5E20),
+    BLUETOOTH("Modo Bluetooth", "Enlace inalámbrico serial local SPP", 0xFF0369A1)
 }
 
 enum class EstadoSuelo(val titulo: String) {

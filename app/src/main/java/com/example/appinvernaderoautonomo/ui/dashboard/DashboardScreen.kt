@@ -28,6 +28,7 @@ import androidx.compose.material.icons.rounded.Autorenew
 import androidx.compose.material.icons.rounded.Bluetooth
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Eco
+import androidx.compose.material.icons.rounded.Grass
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.MeetingRoom
@@ -322,7 +323,7 @@ private fun TabCultivo(
         EncabezadoSeccion(
             titulo = "CÁMARA DE POLICARBONATO EN TIEMPO REAL",
             subtitulo = "Compuerta lateral batiente y extractor de ventilación cruzada",
-            icono = Icons.Rounded.PowerSettingsNew
+            icono = Icons.Rounded.Eco
         )
 
         InvernaderoChamberVisualizer(
@@ -334,7 +335,7 @@ private fun TabCultivo(
         )
 
         TarjetaEstadoEnlace(mensaje = state.ultimoMensaje, estaConectado = state.estaConectado)
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(44.dp))
     }
 }
 
@@ -394,7 +395,7 @@ private fun TabActuadores(
         )
 
         TarjetaEstadoEnlace(mensaje = state.ultimoMensaje, estaConectado = state.estaConectado)
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(44.dp))
     }
 }
 
@@ -444,7 +445,7 @@ private fun TabConexion(
         )
 
         TarjetaEstadoEnlace(mensaje = state.ultimoMensaje, estaConectado = state.estaConectado)
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(44.dp))
     }
 }
 
@@ -454,74 +455,12 @@ private fun TabHistorial(
     currentUser: User,
     onIrAAuditoria: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(ColorFondo)
-    ) {
-        if (currentUser.role.canViewAuditLogs()) {
-            Card(
-                onClick = onIrAAuditoria,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xF7FFFFFF)),
-                border = BorderStroke(1.dp, ColorBordeCard)
-            ) {
-                Row(
-                    modifier = Modifier.padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .background(Color(0xFFE0F2FE), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Security,
-                                contentDescription = null,
-                                tint = Color(0xFF0284C7),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = "Bitácora de Auditoría",
-                                fontWeight = FontWeight.Bold,
-                                color = ColorTextoPrincipal,
-                                style = MaterialTheme.typography.titleSmall
-                            )
-                            Text(
-                                text = "Registro de seguridad, logins y modificaciones",
-                                fontSize = 11.sp,
-                                color = ColorTextoSecundario
-                            )
-                        }
-                    }
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
-                        contentDescription = "Abrir Auditoría",
-                        tint = ColorTextoSecundario,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-        }
-
-        HistorialScreen(
-            repository = repository,
-            onVolver = null,
-            modifier = Modifier.fillMaxSize()
-        )
-    }
+    HistorialScreen(
+        repository = repository,
+        onVolver = null,
+        onIrAAuditoria = if (currentUser.role.canViewAuditLogs()) onIrAAuditoria else null,
+        modifier = Modifier.fillMaxSize()
+    )
 }
 
 @Composable
@@ -991,7 +930,7 @@ private fun TarjetaHumedadSuelo(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Rounded.Air,
+                        imageVector = Icons.Rounded.Grass,
                         contentDescription = "FC-28",
                         tint = ColorVerdePrimario,
                         modifier = Modifier.size(18.dp)
@@ -1789,9 +1728,9 @@ private fun TarjetaSelectorModoConexion(
                 ConnectionMode.values().forEach { modo ->
                     val esSeleccionado = modo == modoActual
                     val (icono, colorActivo) = when (modo) {
-                        ConnectionMode.SIMULACION -> Icons.Rounded.Science to Color(0xFF818CF8)
-                        ConnectionMode.WIFI -> Icons.Rounded.Wifi to Color(0xFF4CAF50)
-                        ConnectionMode.BLUETOOTH -> Icons.Rounded.Bluetooth to Color(0xFF38BDF8)
+                        ConnectionMode.SIMULACION -> Icons.Rounded.Science to Color(0xFF0D9488)
+                        ConnectionMode.WIFI -> Icons.Rounded.Wifi to Color(0xFF1B5E20)
+                        ConnectionMode.BLUETOOTH -> Icons.Rounded.Bluetooth to Color(0xFF0284C7)
                     }
 
                     Surface(

@@ -93,8 +93,7 @@ fun PantallaPerfil(
         // Barra superior de navegación interna
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
                 onClick = onVolver,
@@ -114,7 +113,9 @@ fun PantallaPerfil(
                 text = "Perfil del Operador",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = PastelGreenDark
+                color = PastelGreenDark,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.weight(1f)
             )
 
             IconButton(
@@ -332,7 +333,7 @@ fun PantallaPerfil(
             )
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(48.dp))
     }
 }
 

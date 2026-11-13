@@ -73,6 +73,7 @@ import kotlinx.coroutines.launch
 
 private val ColorVerdePrimario = Color(0xFF4CAF50)
 private val ColorVerdeOscuro = Color(0xFF1B4D28)
+private val ColorTextoSecundario = Color(0xFF43604E)
 
 @Composable
 fun LoginScreen(
@@ -429,20 +430,30 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // Etiqueta de Ciberseguridad ISO / ISA
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Rounded.Shield,
-                    contentDescription = "ISO 27400",
-                    tint = Color(0xFF78909C),
-                    modifier = Modifier.size(14.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "Alineado con ISO 27400 & ISA/IEC 62443 • PBKDF2 10k",
-                    fontSize = 10.sp,
-                    color = Color(0xFF78909C)
-                )
+            // Etiqueta de seguridad agronómica
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = Color(0xD0FFFFFF),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD8E8DE))
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Shield,
+                        contentDescription = "Seguridad",
+                        tint = ColorVerdeOscuro,
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Sistema de Control Agronómico Seguro",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = ColorTextoSecundario
+                    )
+                }
             }
         }
     }

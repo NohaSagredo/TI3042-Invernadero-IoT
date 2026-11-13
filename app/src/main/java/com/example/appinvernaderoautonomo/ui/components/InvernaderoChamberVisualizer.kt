@@ -130,7 +130,10 @@ fun InvernaderoChamberVisualizer(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Box(
                         modifier = Modifier
                             .size(10.dp)
@@ -138,13 +141,17 @@ fun InvernaderoChamberVisualizer(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "MAQUETA DIGITAL: CÁMARA DE POLICARBONATO",
-                        fontSize = 11.sp,
+                        text = "Cámara de Policarbonato",
+                        fontSize = 12.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF1B4D28),
-                        letterSpacing = 0.5.sp
+                        letterSpacing = 0.3.sp,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Surface(
                     shape = RoundedCornerShape(6.dp),
@@ -155,7 +162,9 @@ fun InvernaderoChamberVisualizer(
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF2E7D32),
-                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        softWrap = false,
+                        maxLines = 1
                     )
                 }
             }
