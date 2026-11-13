@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.PI
@@ -205,7 +206,9 @@ fun CompuertaVentanaVisualizer(
                 text = if (angulo == 0) "Compuerta Cerrada" else "Apertura Ventilada",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color(0xFF52796F)
+                color = Color(0xFF52796F),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -346,7 +349,9 @@ fun VentiladorMosfetVisualizer(
                 },
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color(0xFF52796F)
+                color = Color(0xFF52796F),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

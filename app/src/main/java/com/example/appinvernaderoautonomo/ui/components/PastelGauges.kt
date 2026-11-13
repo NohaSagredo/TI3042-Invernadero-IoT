@@ -7,6 +7,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -56,21 +57,27 @@ fun PastelArcGauge(
     )
 
     Column(
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
-            modifier = Modifier.size(width = 118.dp, height = 72.dp),
-            contentAlignment = Alignment.BottomCenter
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(76.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Canvas(modifier = Modifier.size(width = 118.dp, height = 66.dp)) {
-                val strokeWidth = 9.dp.toPx()
-                val padding = strokeWidth / 2f
-                val arcWidth = size.width - (padding * 2)
-                val arcHeight = (size.height * 2) - (padding * 2)
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val strokeWidth = 8.dp.toPx()
+                val w = size.width
+                val h = size.height
 
-                val topLeft = Offset(padding, padding)
-                val arcSize = Size(arcWidth, arcHeight)
+                // Geometría semicircular pura con márgenes de seguridad para no cortar bordes ni puntero
+                val radius = minOf((w / 2f) - strokeWidth - 8.dp.toPx(), h - strokeWidth - 8.dp.toPx())
+                val centerX = w / 2f
+                val centerY = h - 8.dp.toPx()
+
+                val topLeft = Offset(centerX - radius, centerY - radius)
+                val arcSize = Size(radius * 2, radius * 2)
 
                 // 1. Arco base de fondo (Gris menta pastel suave)
                 drawArc(
@@ -95,49 +102,41 @@ fun PastelArcGauge(
                     style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
                 )
 
-                // 3. Puntero en el extremo del arco activo
+                // 3. Puntero alineado con precisión trigonométrica en el extremo del arco activo
                 val rad = (180f + sweep) * (PI / 180f).toFloat()
-                val radiusX = arcWidth / 2f
-                val radiusY = arcHeight / 2f
-                val centerX = padding + radiusX
-                val centerY = padding + (arcHeight / 2f)
-
-                val needleX = centerX + cos(rad) * radiusX
-                val needleY = centerY + sin(rad) * radiusY
+                val needleX = centerX + cos(rad) * radius
+                val needleY = centerY + sin(rad) * radius
 
                 drawCircle(
                     color = Color.White,
-                    radius = strokeWidth * 0.42f,
+                    radius = strokeWidth * 0.44f,
                     center = Offset(needleX, needleY)
                 )
                 drawCircle(
                     color = colorArco,
-                    radius = strokeWidth * 0.25f,
+                    radius = strokeWidth * 0.26f,
                     center = Offset(needleX, needleY)
                 )
             }
 
-            // Valor numérico centrado debajo del arco con efecto odómetro
+            // Valor numérico centrado limpiamente en el área hueca del arco
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(bottom = 2.dp)
+                modifier = Modifier.padding(top = 8.dp)
             ) {
                 PastelOdometerText(
                     value = String.format("%.1f", valor).replace(',', '.'),
-                    fontSize = 17.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF142C1D)
                 )
+                Text(
+                    text = unidad,
+                    fontSize = 10.5.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF52796F)
+                )
             }
         }
-
-        Spacer(modifier = Modifier.height(2.dp))
-
-        Text(
-            text = unidad,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF52796F)
-        )
     }
 }

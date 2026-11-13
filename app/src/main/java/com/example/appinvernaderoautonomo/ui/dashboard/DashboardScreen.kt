@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -63,6 +64,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.appinvernaderoautonomo.iot.GreenhouseIotManager
@@ -144,27 +146,6 @@ fun DashboardScreen(
             onCerrarSesion = onCerrarSesion
         )
 
-        // CONTROL TRI-MODAL DE CONEXIÓN (Simulación / Wi-Fi / Bluetooth)
-        TarjetaSelectorModoConexion(
-            modoActual = state.modoConexion,
-            onCambiarModo = { nuevoModo ->
-                iotManager.cambiarModoConexion(nuevoModo, currentUser)
-            }
-        )
-
-        // DETALLE Y ACCIONES DIRECTAS DEL MODO ACTIVO
-        TarjetaDetalleModoActivo(
-            state = state,
-            currentUser = currentUser,
-            iotManager = iotManager,
-            onAbrirDialogoIp = { mostrarDialogoIp = true }
-        )
-
-        // CENTRO DE NOTIFICACIONES PUSH EN TIEMPO REAL
-        TarjetaCentroNotificacionesPush(
-            onEnviarPrueba = { iotManager.enviarNotificacionPrueba(currentUser) }
-        )
-
         // BANNERS DE CONTINGENCIA Y ESTADO OPERATIVO
         if (!state.estaConectado || state.modoFailSafeBorde) {
             BannerFailSafeBorde(
@@ -184,7 +165,7 @@ fun DashboardScreen(
             )
         }
 
-        // NIVEL 2: Telemetría Ambiental en Tiempo Real
+        // NIVEL 1: Telemetría Ambiental en Tiempo Real
         EncabezadoSeccion(
             titulo = "TELEMETRÍA AMBIENTAL EN VIVO",
             subtitulo = "Sensores de campo DHT22 (Clima) y FC-28 (Sustrato)",
@@ -193,7 +174,7 @@ fun DashboardScreen(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             TarjetaSensor(
                 titulo = "TEMPERATURA",
@@ -232,24 +213,10 @@ fun DashboardScreen(
             estaEnRango = state.estaEnRangoSuelo
         )
 
-        // NIVEL 3: Rutina Biológica Activa y Calibración
+        // NIVEL 2: Actuadores Físicos de Mitigación y Cámara de Policarbonato
         EncabezadoSeccion(
-            titulo = "REGULACIÓN BIOLÓGICA",
-            subtitulo = "Gestión de perfiles de cultivo y límites microclimáticos",
-            icono = Icons.Rounded.Eco
-        )
-
-        TarjetaRutinaCultivo(
-            perfilActivo = state.rutinaActiva,
-            userRole = currentUser.role,
-            onSeleccionarRutina = { perfil -> iotManager.cambiarRutina(perfil, currentUser) },
-            onAbrirCalibracion = { mostrarDialogoUmbrales = true }
-        )
-
-        // NIVEL 4: Actuadores Físicos de Mitigación
-        EncabezadoSeccion(
-            titulo = "ACTUADORES DE PLANTA",
-            subtitulo = "Cámara de policarbonato con flujo de ventilación cruzada",
+            titulo = "CÁMARA DE POLICARBONATO Y ACTUADORES",
+            subtitulo = "Flujo de ventilación cruzada: compuerta lateral y extractor 12V",
             icono = Icons.Rounded.PowerSettingsNew
         )
 
@@ -283,6 +250,48 @@ fun DashboardScreen(
             onBajarVelocidad = { iotManager.setManualVentilador(state.velocidadVentiladorPwm - 40, currentUser) },
             onMaximo = { iotManager.setManualVentilador(255, currentUser) },
             onApagar = { iotManager.setManualVentilador(0, currentUser) }
+        )
+
+        // NIVEL 3: Rutina Biológica Activa y Calibración
+        EncabezadoSeccion(
+            titulo = "REGULACIÓN BIOLÓGICA",
+            subtitulo = "Gestión de perfiles de cultivo y límites microclimáticos",
+            icono = Icons.Rounded.Eco
+        )
+
+        TarjetaRutinaCultivo(
+            perfilActivo = state.rutinaActiva,
+            userRole = currentUser.role,
+            onSeleccionarRutina = { perfil -> iotManager.cambiarRutina(perfil, currentUser) },
+            onAbrirCalibracion = { mostrarDialogoUmbrales = true }
+        )
+
+        // NIVEL 4: Conectividad y Servicios del Sistema
+        EncabezadoSeccion(
+            titulo = "CONECTIVIDAD Y COMUNICACIONES",
+            subtitulo = "Control tri-modal de enlace y notificaciones push en tiempo real",
+            icono = Icons.Rounded.SettingsRemote
+        )
+
+        // CONTROL TRI-MODAL DE CONEXIÓN (Simulación / Wi-Fi / Bluetooth)
+        TarjetaSelectorModoConexion(
+            modoActual = state.modoConexion,
+            onCambiarModo = { nuevoModo ->
+                iotManager.cambiarModoConexion(nuevoModo, currentUser)
+            }
+        )
+
+        // DETALLE Y ACCIONES DIRECTAS DEL MODO ACTIVO
+        TarjetaDetalleModoActivo(
+            state = state,
+            currentUser = currentUser,
+            iotManager = iotManager,
+            onAbrirDialogoIp = { mostrarDialogoIp = true }
+        )
+
+        // CENTRO DE NOTIFICACIONES PUSH EN TIEMPO REAL
+        TarjetaCentroNotificacionesPush(
+            onEnviarPrueba = { iotManager.enviarNotificacionPrueba(currentUser) }
         )
 
         // NIVEL 5: Acciones de Navegación del Sistema (Botones consistentes)
@@ -636,7 +645,7 @@ private fun TarjetaSensor(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -646,20 +655,21 @@ private fun TarjetaSensor(
             ) {
                 Text(
                     text = titulo,
-                    fontSize = 11.sp,
+                    fontSize = 10.5.sp,
                     color = ColorTextoSecundario,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.4.sp
+                    letterSpacing = 0.4.sp,
+                    maxLines = 1
                 )
                 Icon(
                     imageVector = icono,
                     contentDescription = titulo,
                     tint = colorIcono,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(16.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             // Tacómetro semicircular con odómetro integrado
             PastelArcGauge(
@@ -672,15 +682,17 @@ private fun TarjetaSensor(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Surface(
                 shape = RoundedCornerShape(6.dp),
-                color = if (estaEnRango) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
+                color = if (estaEnRango) Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
                     Box(
                         modifier = Modifier
@@ -688,12 +700,14 @@ private fun TarjetaSensor(
                             .clip(CircleShape)
                             .background(if (estaEnRango) Color(0xFF2E7D32) else Color(0xFFC62828))
                     )
-                    Spacer(modifier = Modifier.width(5.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = if (estaEnRango) "Óptimo: $rangoEsperado" else "Alerta: $rangoEsperado",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (estaEnRango) Color(0xFF1B5E20) else Color(0xFFC62828)
+                        text = if (estaEnRango) "Óptimo ($rangoEsperado)" else "Alerta ($rangoEsperado)",
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (estaEnRango) Color(0xFF1B5E20) else Color(0xFFC62828),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -780,9 +794,10 @@ private fun TarjetaHumedadSuelo(
                     )
                 }
                 Text(
-                    text = "Rango Seguro: $rangoEsperado",
+                    text = "Óptimo: $rangoEsperado",
                     style = MaterialTheme.typography.bodySmall,
-                    color = ColorTextoSecundario
+                    color = ColorTextoSecundario,
+                    maxLines = 1
                 )
             }
 
@@ -1367,9 +1382,11 @@ private fun BotonControlActuador(
         ) {
             Text(
                 text = texto,
-                fontSize = 11.sp,
+                fontSize = 10.5.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (esActivo) Color.White else ColorTextoPrincipal
+                color = if (esActivo) Color.White else ColorTextoPrincipal,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -1389,8 +1406,8 @@ private fun SeccionAccionesNavegacion(
             onClick = onIrAHistorial,
             modifier = Modifier
                 .weight(1f)
-                .height(48.dp)
-                .pastelBounceClickable(onClick = onIrAHistorial),
+                .height(46.dp),
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = ColorVerdePrimario),
             elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
@@ -1401,7 +1418,7 @@ private fun SeccionAccionesNavegacion(
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
-            Text("Historial (5 min)", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            Text("Historial (5 min)", fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1)
         }
 
         if (role.canViewAuditLogs()) {
@@ -1409,8 +1426,8 @@ private fun SeccionAccionesNavegacion(
                 onClick = onIrAAuditoria,
                 modifier = Modifier
                     .weight(1f)
-                    .height(48.dp)
-                    .pastelBounceClickable(onClick = onIrAAuditoria),
+                    .height(46.dp),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7)),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
@@ -1421,7 +1438,7 @@ private fun SeccionAccionesNavegacion(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("Auditoría ISO", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Text("Auditoría ISO", fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1)
             }
         }
     }
@@ -1518,7 +1535,7 @@ private fun TarjetaSelectorModoConexion(
                         Row(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(horizontal = 4.dp),
+                                .padding(horizontal = 2.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
@@ -1526,19 +1543,20 @@ private fun TarjetaSelectorModoConexion(
                                 imageVector = icono,
                                 contentDescription = modo.title,
                                 tint = if (esSeleccionado) Color.White else ColorTextoPrincipal,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(15.dp)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
                             Text(
                                 text = when (modo) {
-                                    ConnectionMode.SIMULACION -> "Simulación"
+                                    ConnectionMode.SIMULACION -> "Simular"
                                     ConnectionMode.WIFI -> "Wi-Fi"
                                     ConnectionMode.BLUETOOTH -> "Bluetooth"
                                 },
-                                fontSize = 11.sp,
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = if (esSeleccionado) Color.White else ColorTextoPrincipal,
-                                maxLines = 1
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -1634,16 +1652,18 @@ private fun TarjetaDetalleModoActivo(
                             onClick = { iotManager.simularAlertaTemperatura(currentUser) },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(42.dp),
+                                .height(40.dp),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF87171)),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
                         ) {
                             Text(
-                                text = "Simular Calor Crítico",
+                                text = "Simular Calor",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                maxLines = 1
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -1651,16 +1671,18 @@ private fun TarjetaDetalleModoActivo(
                             onClick = { iotManager.simularAlertaSequia(currentUser) },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(42.dp),
+                                .height(40.dp),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
                         ) {
                             Text(
-                                text = "Simular Sequía Suelo",
+                                text = "Simular Sequía",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                maxLines = 1
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -1670,7 +1692,8 @@ private fun TarjetaDetalleModoActivo(
                             onClick = onAbrirDialogoIp,
                             modifier = Modifier
                                 .weight(1f)
-                                .height(42.dp),
+                                .height(40.dp),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = ColorVerdePrimario),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
@@ -1685,7 +1708,8 @@ private fun TarjetaDetalleModoActivo(
                                 text = "Configurar IP",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                maxLines = 1
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -1693,7 +1717,8 @@ private fun TarjetaDetalleModoActivo(
                             onClick = { iotManager.alternarSimulacionFalloConexion(currentUser) },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(42.dp),
+                                .height(40.dp),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (state.estaConectado) Color(0xFFF87171) else ColorVerdePrimario
@@ -1707,10 +1732,11 @@ private fun TarjetaDetalleModoActivo(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = if (state.estaConectado) "Forzar Fail-Safe" else "Reconectar Wi-Fi",
+                                text = if (state.estaConectado) "Fail-Safe" else "Reconectar",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                maxLines = 1
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -1720,7 +1746,8 @@ private fun TarjetaDetalleModoActivo(
                             onClick = { iotManager.reconectarBluetooth(currentUser) },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(42.dp),
+                                .height(40.dp),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7)),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
@@ -1732,10 +1759,11 @@ private fun TarjetaDetalleModoActivo(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Reconectar BT",
+                                text = "Reconectar",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                maxLines = 1
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -1743,16 +1771,18 @@ private fun TarjetaDetalleModoActivo(
                             onClick = { iotManager.simularAlertaTemperatura(currentUser) },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(42.dp),
+                                .height(40.dp),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF38BDF8)),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
                         ) {
                             Text(
-                                text = "Test Datos SPP",
+                                text = "Test SPP",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                maxLines = 1
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -1809,8 +1839,8 @@ private fun TarjetaCentroNotificacionesPush(
                 onClick = onEnviarPrueba,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(44.dp)
-                    .pastelBounceClickable(onClick = onEnviarPrueba),
+                    .height(44.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
