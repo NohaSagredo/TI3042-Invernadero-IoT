@@ -1103,7 +1103,10 @@ private fun TarjetaCompuertaServo(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = Icons.Rounded.MeetingRoom,
                         contentDescription = "Servo",
@@ -1111,20 +1114,26 @@ private fun TarjetaCompuertaServo(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Ventilación Pasiva (Servo SG90)",
+                            text = "Ventilación Pasiva (Servo)",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = ColorTextoPrincipal
+                            color = ColorTextoPrincipal,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = "Compuerta en Extremo de la Caja de Policarbonato",
+                            text = "Compuerta batiente • Extremo lateral",
                             fontSize = 11.sp,
-                            color = ColorTextoSecundario
+                            color = ColorTextoSecundario,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Surface(
                     shape = RoundedCornerShape(6.dp),
@@ -1132,10 +1141,12 @@ private fun TarjetaCompuertaServo(
                 ) {
                     Text(
                         text = if (esModoManual) "OVERRIDE" else "AUTO",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (esModoManual) Color(0xFFE65100) else Color(0xFF1B5E20)
+                        color = if (esModoManual) Color(0xFFE65100) else Color(0xFF1B5E20),
+                        maxLines = 1,
+                        softWrap = false
                     )
                 }
             }
@@ -1240,7 +1251,10 @@ private fun TarjetaVentiladorMosfet(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = Icons.Rounded.Air,
                         contentDescription = "Ventilador",
@@ -1248,20 +1262,26 @@ private fun TarjetaVentiladorMosfet(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Ventilación Forzada (12V MOSFET)",
+                            text = "Ventilación Forzada (12V)",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = ColorTextoPrincipal
+                            color = ColorTextoPrincipal,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = "Extractor en Extremo Opuesto (Cámara Policarbonato)",
+                            text = "Extractor PWM • Extremo opuesto",
                             fontSize = 11.sp,
-                            color = ColorTextoSecundario
+                            color = ColorTextoSecundario,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Surface(
                     shape = RoundedCornerShape(6.dp),
@@ -1269,10 +1289,12 @@ private fun TarjetaVentiladorMosfet(
                 ) {
                     Text(
                         text = if (esModoManual) "OVERRIDE" else "AUTO",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (esModoManual) Color(0xFFE65100) else Color(0xFF1B5E20)
+                        color = if (esModoManual) Color(0xFFE65100) else Color(0xFF1B5E20),
+                        maxLines = 1,
+                        softWrap = false
                     )
                 }
             }

@@ -8,7 +8,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -18,8 +17,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import kotlin.math.PI
@@ -28,11 +27,12 @@ import kotlin.math.sin
 
 /**
  * Fondo vectorial animado de temática rural bucólica en paleta pastel:
- * - Cielo celeste suave con sol radiante matutino.
- * - Nubes esponjosas flotando suavemente.
- * - Colinas onduladas en verde menta y salvia.
- * - Granja tradicional rústica con silo y molino de viento giratorio.
- * - Campo de girasoles con tallos y pétalos dorados meciéndose con la brisa del viento.
+ * - Cielo dinámico con sol radiante, rayos matutinos y aves sobrevolando.
+ * - Nubes esponjosas flotando con sombras y volumen.
+ * - Colinas onduladas en verde menta y salvia con arboledas distantes.
+ * - Granja tradicional rústica con valla de madera, silo con veleta y molino de viento giratorio.
+ * - Campo de girasoles con doble corona de pétalos dorados y semillas texturadas meciéndose al viento.
+ * - Capa frosted esmerilada luminosa para contrastar perfectamente las tarjetas sin opacar el arte SVG.
  */
 @Composable
 fun FarmPastelBackground(
@@ -52,7 +52,7 @@ fun FarmPastelBackground(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 32_000, easing = LinearEasing),
+            animation = tween(durationMillis = 34_000, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "CloudDrift1"
@@ -70,10 +70,10 @@ fun FarmPastelBackground(
 
     // Pulsación suave de la luz solar o lunar
     val sunPulse by transition.animateFloat(
-        initialValue = 0.95f,
-        targetValue = 1.06f,
+        initialValue = 0.96f,
+        targetValue = 1.05f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 3500, easing = FastOutSlowInEasing),
+            animation = tween(durationMillis = 3600, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "SunPulsing"
@@ -108,22 +108,22 @@ fun FarmPastelBackground(
         // 1. CIELO DINÁMICO ADAPTATIVO A LA HORA DEL DÍA
         val coloresCielo = when {
             esNoche -> listOf(
-                Color(0xFF1E293B), // Noche pastel azul marino
+                Color(0xFF1E293B),
                 Color(0xFF334155),
                 Color(0xFF475569),
-                Color(0xFF1B3D2B)  // Horizonte oscuro sobre las colinas
+                Color(0xFF1B3D2B)
             )
             esAtardecer -> listOf(
-                Color(0xFFF472B6), // Rosa pastel crepúsculo
-                Color(0xFFFB7185), // Coral suave
-                Color(0xFFFED7AA), // Durazno cálido
-                Color(0xFFFEF08A)  // Resplandor dorado de atardecer
+                Color(0xFFF472B6),
+                Color(0xFFFB7185),
+                Color(0xFFFED7AA),
+                Color(0xFFFEF08A)
             )
             else -> listOf(
-                Color(0xFFBAE6FD), // Celeste pastel cielo alto
-                Color(0xFFD0F0FD), // Celeste claro medio
-                Color(0xFFE0F2FE), // Celeste brisa
-                Color(0xFFFEF3C7)  // Horizonte cálido de amanecer
+                Color(0xFFBAE6FD),
+                Color(0xFFD0F0FD),
+                Color(0xFFE0F2FE),
+                Color(0xFFFEF3C7)
             )
         }
 
@@ -137,8 +137,8 @@ fun FarmPastelBackground(
         )
 
         // 2. ASTRO CELESTE (SOL DE DÍA/ATARDECER O LUNA CRECIENTE DE NOCHE)
-        val astroCenter = Offset(w * 0.82f, h * (if (esAtardecer) 0.18f else 0.11f))
-        val astroBaseRadius = w * 0.085f * sunPulse
+        val astroCenter = Offset(w * 0.82f, h * (if (esAtardecer) 0.17f else 0.11f))
+        val astroBaseRadius = w * 0.082f * sunPulse
 
         if (esNoche) {
             // Luna creciente apacible pastel
@@ -156,20 +156,37 @@ fun FarmPastelBackground(
                 radius = astroBaseRadius * 0.9f,
                 center = astroCenter
             )
-            // Sombra recortada para formar la medialuna
             drawCircle(
                 color = Color(0xFF1E293B),
                 radius = astroBaseRadius * 0.78f,
                 center = Offset(astroCenter.x - (astroBaseRadius * 0.35f), astroCenter.y - (astroBaseRadius * 0.15f))
             )
         } else {
+            // Haces de luz solar radiante
+            val rayCount = 8
+            val rayColor = if (esAtardecer) Color(0x22FDBA74) else Color(0x28FFFBEB)
+            for (i in 0 until rayCount) {
+                val rayAngle = (i * (360f / rayCount)) + (cloudProgress1 * 360f * 0.08f)
+                val rad = rayAngle * (PI / 180f).toFloat()
+                val rayEnd = Offset(
+                    astroCenter.x + cos(rad) * (astroBaseRadius * 4.2f),
+                    astroCenter.y + sin(rad) * (astroBaseRadius * 4.2f)
+                )
+                drawLine(
+                    color = rayColor,
+                    start = astroCenter,
+                    end = rayEnd,
+                    strokeWidth = 2.8f
+                )
+            }
+
             // Sol pastel radiante
             val haloColor = if (esAtardecer) Color(0x60FB7185) else Color(0x80FDE047)
             val coreColor = if (esAtardecer) Color(0xFFFDBA74) else Color(0xFFFEF08A)
 
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(haloColor, Color(0x20FEF08A), Color.Transparent),
+                    colors = listOf(haloColor, Color(0x25FEF08A), Color.Transparent),
                     center = astroCenter,
                     radius = astroBaseRadius * 2.3f
                 ),
@@ -183,8 +200,16 @@ fun FarmPastelBackground(
             )
         }
 
-        // 3. NUBES FLOTANTES PASTEL
-        val cloudTint = if (esAtardecer) Color(0xFFFEE2E2) else if (esNoche) Color(0x9094A3B8) else Color(0xE8FFFFFF)
+        // 3. AVES CAMPESTRES EN EL CIELO DISTANTE
+        if (!esNoche) {
+            val birdOffset = (cloudProgress1 * 120f)
+            drawBird(w * 0.30f + birdOffset, h * 0.13f, 1.0f)
+            drawBird(w * 0.36f + birdOffset * 1.15f, h * 0.11f, 0.75f)
+            drawBird(w * 0.25f + birdOffset * 0.9f, h * 0.16f, 0.60f)
+        }
+
+        // 4. NUBES FLOTANTES PASTEL
+        val cloudTint = if (esAtardecer) Color(0xFFFEE2E2) else if (esNoche) Color(0x9094A3B8) else Color(0xF0FFFFFF)
         drawCloud(
             x = ((cloudProgress1 * (w + 240f)) - 120f),
             y = h * 0.08f,
@@ -204,7 +229,7 @@ fun FarmPastelBackground(
             colorTint = cloudTint
         )
 
-        // 4. COLINAS DISTANTES (SALVIA / TONALIDAD DEL MOMENTO)
+        // 5. COLINAS DISTANTES (SALVIA / TONALIDAD DEL MOMENTO)
         val colorColinaLejana = when {
             esNoche -> Color(0xFF2A4837)
             esAtardecer -> Color(0xFFB5D8B5)
@@ -224,7 +249,7 @@ fun FarmPastelBackground(
         drawPath(path = pathColinaLejana, color = colorColinaLejana)
         drawDistantTrees(w = w, h = h)
 
-        // 5. COLINA MEDIA CON LA GRANJA Y EL MOLINO
+        // 6. COLINA MEDIA CON LA GRANJA, VALLA Y EL MOLINO
         val colorColinaMedia = when {
             esNoche -> Color(0xFF203B2B)
             esAtardecer -> Color(0xFF8FB88E)
@@ -243,14 +268,22 @@ fun FarmPastelBackground(
         }
         drawPath(path = pathColinaMedia, color = colorColinaMedia)
 
-        // DIBUJO DE LA GRANJA RÚSTICA (Barn + Silo)
+        // Valla campestre de madera en la ladera
+        drawWoodenFence(
+            x = w * 0.32f,
+            y = h * 0.44f,
+            count = 5,
+            scale = w / 420f
+        )
+
+        // Granja tradicional (Barn + Silo)
         drawGranjaBarn(
             x = w * 0.16f,
             y = h * 0.41f,
             scale = w / 420f
         )
 
-        // DIBUJO DEL MOLINO DE VIENTO (Windmill giratorio)
+        // Molino de viento de campo con aspas giratorias
         drawMolinoViento(
             x = w * 0.82f,
             y = h * 0.435f,
@@ -258,7 +291,7 @@ fun FarmPastelBackground(
             scale = w / 420f
         )
 
-        // 6. COLINA PRINCIPAL DE PRIMER PLANO (PRADERA VERDE)
+        // 7. COLINA PRINCIPAL DE PRIMER PLANO (PRADERA VERDE)
         val colorColinaFrontal = when {
             esNoche -> Color(0xFF1A3323)
             esAtardecer -> Color(0xFF6A996D)
@@ -277,30 +310,31 @@ fun FarmPastelBackground(
         }
         drawPath(path = pathColinaFrontal, color = colorColinaFrontal)
 
-        // 7. CAMPO DE GIRASOLES ANIMADOS MECEndOSE AL VIENTO
+        // 8. CAMPO DE GIRASOLES ANIMADOS MECEndOSE AL VIENTO
         drawCampoGirasoles(
             w = w,
             h = h,
             windSway = sunflowerWindSway
         )
 
-        // 8. CAPA DE CRISTAL ESMERILADO PASTEL (FROSTED SCRIM)
+        // 9. CAPA DE CRISTAL ESMERILADO PASTEL LUMINOSA (FROSTED SCRIM)
+        // Opacidad suave (20%-35%) para que el paisaje vectorial resplandezca sin saturar el texto
         if (mostrarCapaFrosted) {
             val scrimColors = when {
                 esNoche -> listOf(
-                    Color(0xD81E293B),
-                    Color(0xE816221A),
-                    Color(0xEE121E15)
+                    Color(0x351E293B),
+                    Color(0x5016221A),
+                    Color(0x68121E15)
                 )
                 esAtardecer -> listOf(
-                    Color(0xD0FFF1F2),
-                    Color(0xE8FFF7ED),
-                    Color(0xEEF8FAF5)
+                    Color(0x24FFF1F2),
+                    Color(0x38FFF7ED),
+                    Color(0x50F8FAF5)
                 )
                 else -> listOf(
-                    Color(0xD0F0F9FF),
-                    Color(0xE8F7FBF8),
-                    Color(0xEEF1F8F3)
+                    Color(0x1CBAE6FD),
+                    Color(0x30F7FBF8),
+                    Color(0x42F1F8F3)
                 )
             }
             drawRect(
@@ -312,6 +346,59 @@ fun FarmPastelBackground(
                 size = Size(w, h)
             )
         }
+    }
+}
+
+/**
+ * Dibuja un ave campestre en vuelo distante (silueta en V con curvatura orgánica).
+ */
+private fun DrawScope.drawBird(x: Float, y: Float, scale: Float) {
+    val birdColor = Color(0x65475569)
+    val span = 9f * scale
+    val path = Path().apply {
+        moveTo(x - span, y + span * 0.4f)
+        quadraticTo(x - span * 0.5f, y - span * 0.55f, x, y)
+        quadraticTo(x + span * 0.5f, y - span * 0.55f, x + span, y + span * 0.4f)
+    }
+    drawPath(path = path, color = birdColor, style = Stroke(width = 1.4f * scale, cap = StrokeCap.Round))
+}
+
+/**
+ * Dibuja una valla campestre de madera pastel con postes y rieles.
+ */
+private fun DrawScope.drawWoodenFence(x: Float, y: Float, count: Int, scale: Float) {
+    val s = scale.coerceIn(0.7f, 1.2f)
+    val postDist = 13f * s
+    val postH = 15f * s
+    val postW = 3f * s
+
+    // Rieles horizontales
+    drawLine(
+        color = Color(0xFFCBD5E1),
+        start = Offset(x, y - postH * 0.75f),
+        end = Offset(x + count * postDist, y - postH * 0.75f),
+        strokeWidth = 1.4f * s
+    )
+    drawLine(
+        color = Color(0xFFCBD5E1),
+        start = Offset(x, y - postH * 0.35f),
+        end = Offset(x + count * postDist, y - postH * 0.35f),
+        strokeWidth = 1.4f * s
+    )
+
+    // Postes verticales de estacas con punta
+    for (i in 0..count) {
+        val px = x + i * postDist
+        val pathPoste = Path().apply {
+            moveTo(px - postW / 2f, y)
+            lineTo(px - postW / 2f, y - postH)
+            lineTo(px, y - postH - 2.5f * s)
+            lineTo(px + postW / 2f, y - postH)
+            lineTo(px + postW / 2f, y)
+            close()
+        }
+        drawPath(path = pathPoste, color = Color(0xFFF1F5F9))
+        drawPath(path = pathPoste, color = Color(0xFF94A3B8), style = Stroke(width = 0.8f * s))
     }
 }
 
@@ -355,7 +442,7 @@ private fun DrawScope.drawDistantTrees(w: Float, h: Float) {
 }
 
 /**
- * Dibuja la granja tradicional (granero rústico en rojo pastel coral y silo cilíndrico).
+ * Dibuja la granja tradicional (granero rústico en coral suave y silo con veleta).
  */
 private fun DrawScope.drawGranjaBarn(x: Float, y: Float, scale: Float) {
     val s = scale.coerceIn(0.7f, 1.3f)
@@ -368,12 +455,15 @@ private fun DrawScope.drawGranjaBarn(x: Float, y: Float, scale: Float) {
     val siloX = x - siloWidth - 4f
     val siloY = y - (siloHeight - barnHeight)
 
-    // Cuerpo del silo (gris azulado pastel)
+    // Cuerpo del silo (gris azulado pastel con bandas de refuerzo)
     drawRect(
         color = Color(0xFFCBD5E1),
         topLeft = Offset(siloX, siloY + 8f * s),
         size = Size(siloWidth, siloHeight - 8f * s)
     )
+    drawLine(Color(0xFF94A3B8), start = Offset(siloX, siloY + 18f * s), end = Offset(siloX + siloWidth, siloY + 18f * s), strokeWidth = 1f * s)
+    drawLine(Color(0xFF94A3B8), start = Offset(siloX, siloY + 30f * s), end = Offset(siloX + siloWidth, siloY + 30f * s), strokeWidth = 1f * s)
+
     // Cúpula del silo
     drawArc(
         color = Color(0xFF94A3B8),
@@ -383,6 +473,10 @@ private fun DrawScope.drawGranjaBarn(x: Float, y: Float, scale: Float) {
         topLeft = Offset(siloX, siloY),
         size = Size(siloWidth, 16f * s)
     )
+
+    // Veleta en la cúpula del silo
+    drawLine(Color(0xFF475569), start = Offset(siloX + siloWidth / 2f, siloY), end = Offset(siloX + siloWidth / 2f, siloY - 7f * s), strokeWidth = 1.4f * s)
+    drawLine(Color(0xFF475569), start = Offset(siloX + siloWidth / 2f - 4f * s, siloY - 5f * s), end = Offset(siloX + siloWidth / 2f + 4f * s, siloY - 5f * s), strokeWidth = 1.2f * s)
 
     // Cuerpo principal del granero (terracota pastel / coral suave)
     drawRect(
@@ -400,6 +494,15 @@ private fun DrawScope.drawGranjaBarn(x: Float, y: Float, scale: Float) {
     }
     drawPath(path = pathTecho, color = Color(0xFFFEE2E2))
     drawPath(path = pathTecho, color = Color(0xFFF87171), style = Stroke(width = 1.5f * s))
+
+    // Ventana en el ático del granero
+    val winSize = 8f * s
+    val winX = x + (barnWidth - winSize) / 2f
+    val winY = y - 11f * s
+    drawRect(Color(0xFFFEF08A), topLeft = Offset(winX, winY), size = Size(winSize, winSize))
+    drawRect(Color(0xFFB91C1C), topLeft = Offset(winX, winY), size = Size(winSize, winSize), style = Stroke(1.2f * s))
+    drawLine(Color(0xFFB91C1C), start = Offset(winX + winSize / 2f, winY), end = Offset(winX + winSize / 2f, winY + winSize), strokeWidth = 1f * s)
+    drawLine(Color(0xFFB91C1C), start = Offset(winX, winY + winSize / 2f), end = Offset(winX + winSize, winY + winSize / 2f), strokeWidth = 1f * s)
 
     // Puerta del granero con cruz tradicional blanca
     val doorW = 16f * s
@@ -427,14 +530,14 @@ private fun DrawScope.drawGranjaBarn(x: Float, y: Float, scale: Float) {
 }
 
 /**
- * Dibuja un molino de viento de campo con aspas giratorias.
+ * Dibuja un molino de viento de campo con celosía y aspas giratorias.
  */
 private fun DrawScope.drawMolinoViento(x: Float, y: Float, angle: Float, scale: Float) {
     val s = scale.coerceIn(0.7f, 1.3f)
     val towerW = 18f * s
     val towerH = 46f * s
 
-    // Torre trapezoidal del molino (madera clara pastel)
+    // Torre trapezoidal del molino
     val pathTorre = Path().apply {
         moveTo(x - towerW * 0.35f, y - towerH)
         lineTo(x + towerW * 0.35f, y - towerH)
@@ -445,6 +548,10 @@ private fun DrawScope.drawMolinoViento(x: Float, y: Float, angle: Float, scale: 
     drawPath(path = pathTorre, color = Color(0xFFF1F5F9))
     drawPath(path = pathTorre, color = Color(0xFF94A3B8), style = Stroke(width = 1.2f * s))
 
+    // Tirantes de madera en X de la torre
+    drawLine(Color(0xFFCBD5E1), start = Offset(x - towerW * 0.38f, y - towerH * 0.75f), end = Offset(x + towerW * 0.42f, y - towerH * 0.25f), strokeWidth = 1f * s)
+    drawLine(Color(0xFFCBD5E1), start = Offset(x + towerW * 0.38f, y - towerH * 0.75f), end = Offset(x - towerW * 0.42f, y - towerH * 0.25f), strokeWidth = 1f * s)
+
     // Cúpula superior
     val hubCenter = Offset(x, y - towerH)
     drawCircle(
@@ -453,21 +560,19 @@ private fun DrawScope.drawMolinoViento(x: Float, y: Float, angle: Float, scale: 
         center = hubCenter
     )
 
-    // 4 Aspas del molino rotando continuamente
+    // 4 Aspas del molino rotando continuamente con celosía dorada
     rotate(degrees = angle, pivot = hubCenter) {
         val bladeLength = 32f * s
         for (i in 0 until 4) {
             rotate(degrees = i * 90f, pivot = hubCenter) {
-                // Brazo principal del aspa
                 drawLine(
                     color = Color(0xFF475569),
                     start = hubCenter,
                     end = Offset(hubCenter.x, hubCenter.y - bladeLength),
                     strokeWidth = 1.8f * s
                 )
-                // Celosía del aspa (tela vela pastel)
                 drawRect(
-                    color = Color(0xCCFEF08A),
+                    color = Color(0xDDFEF08A),
                     topLeft = Offset(hubCenter.x + 1.5f * s, hubCenter.y - bladeLength),
                     size = Size(7.5f * s, bladeLength * 0.75f)
                 )
@@ -477,8 +582,8 @@ private fun DrawScope.drawMolinoViento(x: Float, y: Float, angle: Float, scale: 
 }
 
 /**
- * Dibuja un campo abundante de girasoles con tallos curvos, hojas y pétalos dorados
- * meciéndose armónicamente con la brisa del viento.
+ * Dibuja un campo abundante de girasoles con doble corona de pétalos dorados
+ * y disco central texturado meciéndose suavemente con la brisa.
  */
 private fun DrawScope.drawCampoGirasoles(w: Float, h: Float, windSway: Float) {
     data class SunflowerConfig(
@@ -488,9 +593,7 @@ private fun DrawScope.drawCampoGirasoles(w: Float, h: Float, windSway: Float) {
         val phase: Float
     )
 
-    // Distribución armónica de girasoles a lo largo del campo frontal
     val girasoles = listOf(
-        // Hilera posterior (más pequeños, mayor densidad)
         SunflowerConfig(0.04f, 0.65f, 0.55f, 0.2f),
         SunflowerConfig(0.12f, 0.67f, 0.60f, 0.8f),
         SunflowerConfig(0.22f, 0.64f, 0.52f, 1.4f),
@@ -502,7 +605,6 @@ private fun DrawScope.drawCampoGirasoles(w: Float, h: Float, windSway: Float) {
         SunflowerConfig(0.85f, 0.66f, 0.56f, 0.9f),
         SunflowerConfig(0.95f, 0.65f, 0.60f, 2.4f),
 
-        // Hilera media (tamaño estándar)
         SunflowerConfig(0.08f, 0.76f, 0.82f, 1.1f),
         SunflowerConfig(0.19f, 0.79f, 0.88f, 2.6f),
         SunflowerConfig(0.28f, 0.75f, 0.78f, 0.3f),
@@ -513,7 +615,6 @@ private fun DrawScope.drawCampoGirasoles(w: Float, h: Float, windSway: Float) {
         SunflowerConfig(0.81f, 0.82f, 0.95f, 1.5f),
         SunflowerConfig(0.91f, 0.78f, 0.80f, 3.4f),
 
-        // Hilera frontal destacada (girasoles grandes y expresivos)
         SunflowerConfig(0.03f, 0.89f, 1.15f, 0.6f),
         SunflowerConfig(0.15f, 0.92f, 1.25f, 2.0f),
         SunflowerConfig(0.26f, 0.90f, 1.10f, 1.3f),
@@ -530,12 +631,11 @@ private fun DrawScope.drawCampoGirasoles(w: Float, h: Float, windSway: Float) {
         val scale = item.scale
         val stemHeight = 55f * scale
 
-        // Desplazamiento orgánico por viento
         val currentSway = sin(windSway * 0.1f + item.phase) * (8f * scale)
         val headX = posX + currentSway
         val headY = baseY - stemHeight
 
-        // 1. Tallo curvado verde pastel
+        // 1. Tallo verde curvo
         val pathTallo = Path().apply {
             moveTo(posX, baseY)
             quadraticTo(
@@ -551,7 +651,7 @@ private fun DrawScope.drawCampoGirasoles(w: Float, h: Float, windSway: Float) {
             style = Stroke(width = 3.2f * scale)
         )
 
-        // 2. Hojas laterales verde salvia
+        // 2. Hojas laterales verde menta
         val leafY = baseY - stemHeight * 0.45f
         val leafX = posX + (currentSway * 0.35f)
         val pathHoja = Path().apply {
@@ -562,14 +662,14 @@ private fun DrawScope.drawCampoGirasoles(w: Float, h: Float, windSway: Float) {
         }
         drawPath(path = pathHoja, color = Color(0xFF52B788))
 
-        // 3. Cabeza del Girasol (Corona de pétalos amarillos y disco marrón)
+        // 3. Cabeza del girasol
         val headCenter = Offset(headX, headY)
         val centerRadius = 8.5f * scale
         val petalLength = 16f * scale
         val petalWidth = 6.5f * scale
         val petalCount = 14
 
-        // Corona de pétalos dorados en abanico circular
+        // Capa exterior de pétalos (amarillo limón pastel)
         for (p in 0 until petalCount) {
             val petalAngle = (p * (360f / petalCount)) + (currentSway * 2.5f)
             val rad = petalAngle * (PI / 180f).toFloat()
@@ -597,27 +697,42 @@ private fun DrawScope.drawCampoGirasoles(w: Float, h: Float, windSway: Float) {
                 )
                 close()
             }
-
-            // Alternancia sutil de tonos amarillos pastel para profundidad
-            val colorPetalo = if (p % 2 == 0) Color(0xFFFDE047) else Color(0xFFFEF08A)
-            drawPath(path = pathPetalo, color = colorPetalo)
+            drawPath(path = pathPetalo, color = if (p % 2 == 0) Color(0xFFFDE047) else Color(0xFFFEF08A))
         }
 
-        // Disco central de semillas (marrón avellana pastel y texturado)
+        // Capa interior de pétalos secundarios (dorado ámbar)
+        for (p in 0 until (petalCount / 2)) {
+            val angle = (p * (360f / (petalCount / 2f))) + 12f + (currentSway * 2.5f)
+            val rad = angle * (PI / 180f).toFloat()
+            val pTipX = headX + cos(rad) * (centerRadius + petalLength * 0.65f)
+            val pTipY = headY + sin(rad) * (centerRadius + petalLength * 0.65f)
+            drawCircle(Color(0xFFF59E0B), radius = 2.5f * scale, center = Offset(pTipX, pTipY))
+        }
+
+        // Disco central de semillas (marrón tostado y textura de micro-semillas)
         drawCircle(
-            color = Color(0xFF78350F), // Marrón tierra profundo
+            color = Color(0xFF78350F),
             radius = centerRadius,
             center = headCenter
         )
         drawCircle(
-            color = Color(0xFF92400E), // Borde marrón tostado
-            radius = centerRadius * 0.75f,
+            color = Color(0xFF92400E),
+            radius = centerRadius * 0.72f,
             center = headCenter
         )
         drawCircle(
-            color = Color(0xFFB45309), // Centro avellana
+            color = Color(0xFFB45309),
             radius = centerRadius * 0.40f,
             center = headCenter
         )
+        // Punteado concéntrico de semillas
+        for (s in 0 until 6) {
+            val a = s * 60f * (PI / 180f).toFloat()
+            drawCircle(
+                color = Color(0xFFFDE68A),
+                radius = 1f * scale,
+                center = Offset(headCenter.x + cos(a) * (centerRadius * 0.55f), headCenter.y + sin(a) * (centerRadius * 0.55f))
+            )
+        }
     }
 }

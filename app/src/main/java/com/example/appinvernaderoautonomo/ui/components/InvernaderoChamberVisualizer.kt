@@ -238,30 +238,49 @@ fun InvernaderoChamberVisualizer(
                         )
                     )
 
-                    // 3. Sensor FC-28 incrustado en el suelo
+                    // Textura de perlita y partículas orgánicas en el suelo
+                    val soilParticleCount = 8
+                    for (sp in 0 until soilParticleCount) {
+                        val pX = boxMarginLeft + 14f + (sp * (boxWidth - 28f) / soilParticleCount)
+                        val pY = soilTop + 8f + ((sp % 3) * 6f)
+                        drawCircle(Color(0x70FEF9C3), radius = 1.3f, center = Offset(pX, pY))
+                    }
+
+                    // 3. Sensor FC-28 incrustado en el suelo con terminales dorados y halo de humedad
                     val fc28X = boxMarginLeft + boxWidth * 0.26f
                     val fc28Top = soilTop - 16f
+
+                    // Halo sutil de detección de humedad en el suelo
+                    val haloColorSuelo = if (humedadSueloRaw <= 850) Color(0x3538BDF8) else Color(0x25F59E0B)
+                    drawCircle(haloColorSuelo, radius = 14f, center = Offset(fc28X, soilTop + 14f))
+
+                    // PCB azul del sensor
                     drawRect(
                         color = Color(0xFF1E3A8A),
                         topLeft = Offset(fc28X - 5f, fc28Top),
                         size = Size(10f, 13f)
                     )
+                    // Pistas de cobre doradas en PCB
+                    drawLine(Color(0xFFFDE047), start = Offset(fc28X - 2f, fc28Top + 2f), end = Offset(fc28X - 2f, fc28Top + 8f), strokeWidth = 1f)
+                    drawLine(Color(0xFFFDE047), start = Offset(fc28X + 2f, fc28Top + 2f), end = Offset(fc28X + 2f, fc28Top + 8f), strokeWidth = 1f)
+
+                    // Horquillas metálicas (electrodos bifurcados)
                     drawLine(
-                        color = Color(0xFFCBD5E1),
+                        color = Color(0xFFE2E8F0),
                         start = Offset(fc28X - 2.5f, fc28Top + 13f),
-                        end = Offset(fc28X - 2.5f, fc28Top + 26f),
-                        strokeWidth = 2f
+                        end = Offset(fc28X - 2.5f, fc28Top + 27f),
+                        strokeWidth = 2.2f
                     )
                     drawLine(
-                        color = Color(0xFFCBD5E1),
+                        color = Color(0xFFE2E8F0),
                         start = Offset(fc28X + 2.5f, fc28Top + 13f),
-                        end = Offset(fc28X + 2.5f, fc28Top + 26f),
-                        strokeWidth = 2f
+                        end = Offset(fc28X + 2.5f, fc28Top + 27f),
+                        strokeWidth = 2.2f
                     )
                     val fc28LedColor = if (humedadSueloRaw <= 850) Color(0xFF4CAF50) else Color(0xFFEF4444)
                     drawCircle(
                         color = fc28LedColor,
-                        radius = 2f,
+                        radius = 2.2f,
                         center = Offset(fc28X, fc28Top + 4f)
                     )
 
@@ -292,11 +311,17 @@ fun InvernaderoChamberVisualizer(
                             style = Stroke(width = 2.8f, cap = StrokeCap.Round)
                         )
 
+                        // Hojas con nervadura y rocío
                         val leafY1 = plantBaseY - stemHeight * 0.40f
-                        drawCircle(Color(0xFF52B788), radius = 6f, center = Offset(plantBaseX - 7f, leafY1))
+                        drawCircle(Color(0xFF52B788), radius = 6.2f, center = Offset(plantBaseX - 7f, leafY1))
+                        drawLine(Color(0xFF2D6A4F), start = Offset(plantBaseX - 3f, leafY1), end = Offset(plantBaseX - 10f, leafY1), strokeWidth = 1f)
+                        drawCircle(Color(0x90FFFFFF), radius = 1.2f, center = Offset(plantBaseX - 6f, leafY1 - 2f)) // Rocío
+
                         val leafY2 = plantBaseY - stemHeight * 0.65f
-                        drawCircle(Color(0xFF40916C), radius = 6f, center = Offset(plantBaseX + 7f, leafY2))
-                        drawCircle(Color(0xFF74C69D), radius = 5f, center = Offset(stemTopX, stemTopY))
+                        drawCircle(Color(0xFF40916C), radius = 6.2f, center = Offset(plantBaseX + 7f, leafY2))
+                        drawLine(Color(0xFF1B4D28), start = Offset(plantBaseX + 3f, leafY2), end = Offset(plantBaseX + 10f, leafY2), strokeWidth = 1f)
+
+                        drawCircle(Color(0xFF74C69D), radius = 5.2f, center = Offset(stemTopX, stemTopY))
                     }
 
                     // 5. Sensor DHT22 suspendido en el aire interior
@@ -311,16 +336,20 @@ fun InvernaderoChamberVisualizer(
                     drawRoundRect(
                         color = Color.White,
                         topLeft = Offset(dhtX - 6f, dhtY),
-                        size = Size(12f, 14f),
+                        size = Size(12f, 15f),
                         cornerRadius = CornerRadius(2f, 2f)
                     )
                     drawRoundRect(
                         color = Color(0xFF94A3B8),
                         topLeft = Offset(dhtX - 6f, dhtY),
-                        size = Size(12f, 14f),
+                        size = Size(12f, 15f),
                         cornerRadius = CornerRadius(2f, 2f),
                         style = Stroke(width = 1f)
                     )
+                    // Rejillas de toma de aire del DHT22
+                    drawLine(Color(0xFFCBD5E1), start = Offset(dhtX - 4f, dhtY + 4f), end = Offset(dhtX + 4f, dhtY + 4f), strokeWidth = 1f)
+                    drawLine(Color(0xFFCBD5E1), start = Offset(dhtX - 4f, dhtY + 7f), end = Offset(dhtX + 4f, dhtY + 7f), strokeWidth = 1f)
+                    drawLine(Color(0xFFCBD5E1), start = Offset(dhtX - 4f, dhtY + 10f), end = Offset(dhtX + 4f, dhtY + 10f), strokeWidth = 1f)
 
                     // 6. EXTREMO IZQUIERDO: Compuerta batiente de policarbonato (Servo SG90)
                     val hatchHingeX = boxMarginLeft
@@ -336,7 +365,7 @@ fun InvernaderoChamberVisualizer(
                         cap = StrokeCap.Round
                     )
 
-                    // Panel batiente abriéndose hacia afuera (hacia la izquierda, sin cortar el lienzo)
+                    // Panel batiente abriéndose hacia afuera con varilla de empuje del servo
                     rotate(degrees = -anguloAnimado, pivot = Offset(hatchHingeX, hatchHingeY)) {
                         drawLine(
                             color = Color(0xFF4CAF50),
@@ -350,6 +379,14 @@ fun InvernaderoChamberVisualizer(
                             start = Offset(hatchHingeX - 2f, hatchHingeY + 2f),
                             end = Offset(hatchHingeX - 2f, hatchHingeY + hatchLength - 2f),
                             strokeWidth = 2.5f
+                        )
+                        // Brazo del servo SG90
+                        drawLine(
+                            color = Color(0xFF2E7D32),
+                            start = Offset(hatchHingeX, hatchHingeY + hatchLength * 0.5f),
+                            end = Offset(hatchHingeX + 12f, hatchHingeY + hatchLength * 0.5f),
+                            strokeWidth = 2f,
+                            cap = StrokeCap.Round
                         )
                     }
                     drawCircle(Color(0xFF1E293B), radius = 4f, center = Offset(hatchHingeX, hatchHingeY))
@@ -435,6 +472,30 @@ fun InvernaderoChamberVisualizer(
                         strokeWidth = 2f,
                         cap = StrokeCap.Round
                     )
+
+                    // Reflejos diagonales especulares de la lámina frontal de policarbonato
+                    drawLine(
+                        color = Color(0x22FFFFFF),
+                        start = Offset(boxMarginLeft + boxWidth * 0.15f, boxMarginTop + 6f),
+                        end = Offset(boxMarginLeft + boxWidth * 0.35f, boxMarginBottom - 6f),
+                        strokeWidth = 5f,
+                        cap = StrokeCap.Round
+                    )
+                    drawLine(
+                        color = Color(0x15FFFFFF),
+                        start = Offset(boxMarginLeft + boxWidth * 0.42f, boxMarginTop + 6f),
+                        end = Offset(boxMarginLeft + boxWidth * 0.62f, boxMarginBottom - 6f),
+                        strokeWidth = 3f,
+                        cap = StrokeCap.Round
+                    )
+
+                    // Pernos de montaje en las 4 esquinas del marco de aluminio
+                    val rivetRadius = 2.2f
+                    val rivetColor = Color(0xFF94A3B8)
+                    drawCircle(rivetColor, radius = rivetRadius, center = Offset(boxMarginLeft + 5f, boxMarginTop + 5f))
+                    drawCircle(rivetColor, radius = rivetRadius, center = Offset(boxMarginLeft + boxWidth - 5f, boxMarginTop + 5f))
+                    drawCircle(rivetColor, radius = rivetRadius, center = Offset(boxMarginLeft + 5f, boxMarginBottom - 5f))
+                    drawCircle(rivetColor, radius = rivetRadius, center = Offset(boxMarginLeft + boxWidth - 5f, boxMarginBottom - 5f))
                 }
             }
 
