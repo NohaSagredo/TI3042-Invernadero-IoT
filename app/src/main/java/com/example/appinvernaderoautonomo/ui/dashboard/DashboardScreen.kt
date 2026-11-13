@@ -73,6 +73,7 @@ import com.example.appinvernaderoautonomo.model.PlantProfile
 import com.example.appinvernaderoautonomo.model.Role
 import com.example.appinvernaderoautonomo.model.User
 import com.example.appinvernaderoautonomo.ui.components.CompuertaVentanaVisualizer
+import com.example.appinvernaderoautonomo.ui.components.InvernaderoChamberVisualizer
 import com.example.appinvernaderoautonomo.ui.components.PastelArcGauge
 import com.example.appinvernaderoautonomo.ui.components.PastelOdometerText
 import com.example.appinvernaderoautonomo.ui.components.VentiladorMosfetVisualizer
@@ -248,8 +249,17 @@ fun DashboardScreen(
         // NIVEL 4: Actuadores Físicos de Mitigación
         EncabezadoSeccion(
             titulo = "ACTUADORES DE PLANTA",
-            subtitulo = "Control proporcional cenital y ventilación forzada 12V",
+            subtitulo = "Cámara de policarbonato con flujo de ventilación cruzada",
             icono = Icons.Rounded.PowerSettingsNew
+        )
+
+        // Maqueta Digital en Vivo: Caja Rectangular de Policarbonato
+        InvernaderoChamberVisualizer(
+            anguloCompuerta = state.anguloVentana,
+            velocidadFanPwm = state.velocidadVentiladorPwm,
+            humedadSueloRaw = state.humedadSueloRaw,
+            temperatura = state.temperatura,
+            modifier = Modifier.fillMaxWidth()
         )
 
         // Compuerta Batiente (Servo SG90)
@@ -1094,7 +1104,7 @@ private fun TarjetaCompuertaServo(
                             color = ColorTextoPrincipal
                         )
                         Text(
-                            text = "Compuerta Cenital Superior",
+                            text = "Compuerta en Extremo de la Caja de Policarbonato",
                             fontSize = 11.sp,
                             color = ColorTextoSecundario
                         )
@@ -1231,7 +1241,7 @@ private fun TarjetaVentiladorMosfet(
                             color = ColorTextoPrincipal
                         )
                         Text(
-                            text = "Driver IRF520N con PWM",
+                            text = "Extractor en Extremo Opuesto (Cámara Policarbonato)",
                             fontSize = 11.sp,
                             color = ColorTextoSecundario
                         )

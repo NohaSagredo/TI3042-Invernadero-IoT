@@ -90,92 +90,95 @@ fun CompuertaVentanaVisualizer(
             val w = size.width
             val h = size.height
 
-            // 1. Marco estructural del techo del invernadero (Gablete en perfil pastel)
+            // 1. Marco lateral de la caja rectangular de policarbonato
             val marcoColor = Color(0xFF64748B)
-            val vigaColor = Color(0xFF94A3B8)
-            val baseTechoY = h * 0.78f
-            val cumbreraX = w * 0.32f
-            val cumbreraY = h * 0.28f
+            val vigaColor = Color(0xFFCBD5E1)
+            val paredX = w * 0.42f
+            val baseCajaY = h * 0.88f
+            val techoCajaY = h * 0.16f
 
-            // Viga fija del techo (lado izquierdo)
+            // Pared vertical fija inferior de policarbonato
             drawLine(
                 color = marcoColor,
-                start = Offset(w * 0.06f, baseTechoY),
-                end = Offset(cumbreraX, cumbreraY),
+                start = Offset(paredX, h * 0.62f),
+                end = Offset(paredX, baseCajaY),
                 strokeWidth = 4.5f,
                 cap = StrokeCap.Round
             )
-
-            // Viga base horizontal
+            // Techo horizontal superior de la caja
+            drawLine(
+                color = marcoColor,
+                start = Offset(paredX, techoCajaY),
+                end = Offset(w * 0.95f, techoCajaY),
+                strokeWidth = 3.5f,
+                cap = StrokeCap.Round
+            )
+            // Base horizontal de la caja
             drawLine(
                 color = vigaColor,
-                start = Offset(w * 0.06f, baseTechoY),
-                end = Offset(w * 0.94f, baseTechoY),
-                strokeWidth = 3f,
+                start = Offset(paredX, baseCajaY),
+                end = Offset(w * 0.95f, baseCajaY),
+                strokeWidth = 3.5f,
                 cap = StrokeCap.Round
             )
 
-            // Eje de bisagra en la cumbrera
+            // Eje de la bisagra superior de la compuerta
+            val bisagraX = paredX
+            val bisagraY = techoCajaY + 4f
             drawCircle(
-                color = Color(0xFF334155),
+                color = Color(0xFF1E293B),
                 radius = 5.5f,
-                center = Offset(cumbreraX, cumbreraY)
+                center = Offset(bisagraX, bisagraY)
             )
 
-            // 2. Compuerta Batiente Móvil (Panel acristalado que rota sobre la cumbrera)
-            val largoCompuerta = w * 0.58f
-            // Ángulo 0° = apoyada sobre el techo derecho (inclinación ~25° hacia abajo)
-            // Apertura de 0 a 90° levanta la compuerta hacia arriba
-            val baseInclinacion = 25f
-            val anguloTotalRotacion = baseInclinacion - (anguloAnimado * 0.85f)
+            // 2. Compuerta Batiente de Policarbonato (Abre hacia afuera / hacia la izquierda)
+            val largoCompuerta = h * 0.48f
 
-            rotate(degrees = anguloTotalRotacion, pivot = Offset(cumbreraX, cumbreraY)) {
-                val panelEndX = cumbreraX + largoCompuerta
-                val panelEndY = cumbreraY
+            rotate(degrees = -anguloAnimado, pivot = Offset(bisagraX, bisagraY)) {
+                val panelEndY = bisagraY + largoCompuerta
 
-                // Cristal translúcido pastel de la compuerta
+                // Cristal translúcido de la lámina de policarbonato
                 val pathVidrio = Path().apply {
-                    moveTo(cumbreraX, cumbreraY - 3f)
-                    lineTo(panelEndX, panelEndY - 3f)
-                    lineTo(panelEndX, panelEndY + 8f)
-                    lineTo(cumbreraX, cumbreraY + 8f)
+                    moveTo(bisagraX - 6f, bisagraY)
+                    lineTo(bisagraX + 2f, bisagraY)
+                    lineTo(bisagraX + 2f, panelEndY)
+                    lineTo(bisagraX - 6f, panelEndY)
                     close()
                 }
-                drawPath(path = pathVidrio, color = Color(0x60D8F3DC))
+                drawPath(path = pathVidrio, color = Color(0x60BAE6FD))
 
                 // Marco exterior de la compuerta batiente (Verde menta pastel)
                 drawLine(
                     color = Color(0xFF4CAF50),
-                    start = Offset(cumbreraX, cumbreraY),
-                    end = Offset(panelEndX, panelEndY),
+                    start = Offset(bisagraX, bisagraY),
+                    end = Offset(bisagraX, panelEndY),
                     strokeWidth = 5.5f,
                     cap = StrokeCap.Round
                 )
 
-                // Tirante o brazo del servo SG90
+                // Brazo/Varilla de empuje del servomotor SG90
                 drawLine(
                     color = Color(0xFF2E7D32),
-                    start = Offset(cumbreraX + largoCompuerta * 0.65f, panelEndY),
-                    end = Offset(cumbreraX + largoCompuerta * 0.65f, panelEndY + 12f),
+                    start = Offset(bisagraX, bisagraY + largoCompuerta * 0.55f),
+                    end = Offset(bisagraX + 16f, bisagraY + largoCompuerta * 0.55f),
                     strokeWidth = 2.5f,
                     cap = StrokeCap.Round
                 )
             }
 
-            // 3. Flechas animadas de ventilación natural cuando la compuerta está abierta
-            if (anguloAnimado > 12f) {
-                val airColor = Color(0x9038BDF8)
+            // 3. Flechas animadas de flujo de entrada cuando la compuerta está abierta
+            if (anguloAnimado > 10f) {
+                val airColor = Color(0x9538BDF8)
                 val arrowCount = 3
                 for (i in 0 until arrowCount) {
                     val progress = (brisaPhase + (i * 0.33f)) % 1f
-                    val startX = cumbreraX + (w * 0.22f) + (i * 14f)
-                    val currentY = baseTechoY - (progress * (baseTechoY - cumbreraY + 10f))
-                    val currentX = startX + (sin(progress * PI.toFloat()) * 6f)
+                    val startX = paredX - 28f + (progress * 45f)
+                    val currentY = techoCajaY + 16f + (i * 12f)
 
                     drawCircle(
                         color = airColor,
-                        radius = 2.5f * (1f - progress * 0.4f),
-                        center = Offset(currentX, currentY)
+                        radius = 2.5f * (1f - progress * 0.3f),
+                        center = Offset(startX, currentY)
                     )
                 }
             }
