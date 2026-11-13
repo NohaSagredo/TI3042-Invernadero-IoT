@@ -71,8 +71,8 @@ import com.example.appinvernaderoautonomo.security.FailSafeLockoutManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-private val ColorVerdePrimario = Color(0xFF1E7E34)
-private val ColorVerdeOscuro = Color(0xFF145A27)
+private val ColorVerdePrimario = Color(0xFF4CAF50)
+private val ColorVerdeOscuro = Color(0xFF1B4D28)
 
 @Composable
 fun LoginScreen(
@@ -139,7 +139,7 @@ fun LoginScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF7FBF8))
+            .background(Color(0x22F7FBF8))
             .padding(horizontal = 20.dp, vertical = 16.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -232,10 +232,10 @@ fun LoginScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = Color(0xF4FFFFFF)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
                 border = CardDefaults.outlinedCardBorder().copy(
-                    brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFE5ECE7))
+                    brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFD8E8DE))
                 )
             ) {
                 Column(

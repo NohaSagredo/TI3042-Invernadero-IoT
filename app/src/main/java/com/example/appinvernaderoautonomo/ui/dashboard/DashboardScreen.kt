@@ -74,15 +74,15 @@ import com.example.appinvernaderoautonomo.model.Role
 import com.example.appinvernaderoautonomo.model.User
 import com.example.appinvernaderoautonomo.ui.thresholds.ThresholdDialog
 
-// Paleta cromática intencional y contrastada (Anti-Slop / Blanco y Verde Agrícola)
-private val ColorFondo = Color(0xFFF7FBF8)
-private val ColorVerdePrimario = Color(0xFF1E7E34)
-private val ColorVerdeOscuro = Color(0xFF145A27)
+// Paleta cromática intencional en tonos pastel (Granja, Cielo Celeste y Girasoles)
+private val ColorFondo = Color(0x22F7FBF8) // Semitransparente para dejar lucir el fondo animado
+private val ColorVerdePrimario = Color(0xFF4CAF50)
+private val ColorVerdeOscuro = Color(0xFF1B4D28)
 private val ColorVerdeSuave = Color(0xFFE8F5E9)
 private val ColorVerdeBorde = Color(0xFFC8E6C9)
-private val ColorTextoPrincipal = Color(0xFF1C2833)
-private val ColorTextoSecundario = Color(0xFF5D6D7E)
-private val ColorBordeCard = Color(0xFFE5ECE7)
+private val ColorTextoPrincipal = Color(0xFF142C1D)
+private val ColorTextoSecundario = Color(0xFF43604E)
+private val ColorBordeCard = Color(0xFFD8E8DE)
 
 @Composable
 fun DashboardScreen(
@@ -331,7 +331,7 @@ private fun HeaderUsuarioRBAC(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xF2FFFFFF)),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
         border = CardDefaults.outlinedCardBorder().copy(
             brush = androidx.compose.ui.graphics.SolidColor(ColorBordeCard)
@@ -600,7 +600,7 @@ private fun TarjetaSensor(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xF2FFFFFF)),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         border = CardDefaults.outlinedCardBorder().copy(
             brush = androidx.compose.ui.graphics.SolidColor(ColorBordeCard)
@@ -681,7 +681,7 @@ private fun TarjetaHumedadSuelo(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xF2FFFFFF)),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         border = CardDefaults.outlinedCardBorder().copy(
             brush = androidx.compose.ui.graphics.SolidColor(ColorBordeCard)
@@ -771,7 +771,7 @@ private fun TarjetaRutinaCultivo(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xF2FFFFFF)),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
         border = CardDefaults.outlinedCardBorder().copy(
             brush = androidx.compose.ui.graphics.SolidColor(ColorBordeCard)
@@ -1034,7 +1034,7 @@ private fun TarjetaCompuertaServo(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xF2FFFFFF)),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         border = CardDefaults.outlinedCardBorder().copy(
             brush = androidx.compose.ui.graphics.SolidColor(ColorBordeCard)
@@ -1163,7 +1163,7 @@ private fun TarjetaVentiladorMosfet(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xF2FFFFFF)),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         border = CardDefaults.outlinedCardBorder().copy(
             brush = androidx.compose.ui.graphics.SolidColor(ColorBordeCard)
@@ -1353,7 +1353,7 @@ private fun SeccionAccionesNavegacion(
                     .weight(1f)
                     .height(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0277BD)),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7)),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
             ) {
                 Icon(
@@ -1372,7 +1372,8 @@ private fun SeccionAccionesNavegacion(
 private fun TarjetaEstadoEnlace(mensaje: String, estaConectado: Boolean) {
     Surface(
         shape = RoundedCornerShape(10.dp),
-        color = Color(0xFFECEFF1),
+        color = Color(0xF2F1F5F2),
+        border = BorderStroke(1.dp, ColorBordeCard),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -1404,7 +1405,7 @@ private fun TarjetaSelectorModoConexion(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xF2FFFFFF)),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         border = BorderStroke(1.dp, ColorBordeCard)
     ) {
@@ -1438,9 +1439,9 @@ private fun TarjetaSelectorModoConexion(
                 ConnectionMode.values().forEach { modo ->
                     val esSeleccionado = modo == modoActual
                     val (icono, colorActivo) = when (modo) {
-                        ConnectionMode.SIMULACION -> Icons.Rounded.Science to Color(0xFF5C6BC0)
-                        ConnectionMode.WIFI -> Icons.Rounded.Wifi to ColorVerdePrimario
-                        ConnectionMode.BLUETOOTH -> Icons.Rounded.Bluetooth to Color(0xFF1976D2)
+                        ConnectionMode.SIMULACION -> Icons.Rounded.Science to Color(0xFF818CF8)
+                        ConnectionMode.WIFI -> Icons.Rounded.Wifi to Color(0xFF4CAF50)
+                        ConnectionMode.BLUETOOTH -> Icons.Rounded.Bluetooth to Color(0xFF38BDF8)
                     }
 
                     Surface(
@@ -1498,7 +1499,7 @@ private fun TarjetaDetalleModoActivo(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xF2FFFFFF)),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         border = BorderStroke(1.dp, ColorBordeCard)
     ) {
@@ -1576,7 +1577,7 @@ private fun TarjetaDetalleModoActivo(
                                 .weight(1f)
                                 .height(42.dp),
                             shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF87171)),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
                         ) {
                             Text(
@@ -1593,7 +1594,7 @@ private fun TarjetaDetalleModoActivo(
                                 .weight(1f)
                                 .height(42.dp),
                             shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100)),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
                         ) {
                             Text(
@@ -1636,7 +1637,7 @@ private fun TarjetaDetalleModoActivo(
                                 .height(42.dp),
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (state.estaConectado) Color(0xFFD32F2F) else ColorVerdePrimario
+                                containerColor = if (state.estaConectado) Color(0xFFF87171) else ColorVerdePrimario
                             ),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
                         ) {
@@ -1662,7 +1663,7 @@ private fun TarjetaDetalleModoActivo(
                                 .weight(1f)
                                 .height(42.dp),
                             shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7)),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
                         ) {
                             Icon(
@@ -1685,7 +1686,7 @@ private fun TarjetaDetalleModoActivo(
                                 .weight(1f)
                                 .height(42.dp),
                             shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0288D1)),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF38BDF8)),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
                         ) {
                             Text(
@@ -1709,7 +1710,7 @@ private fun TarjetaCentroNotificacionesPush(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xF2FFFFFF)),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         border = BorderStroke(1.dp, ColorBordeCard)
     ) {
@@ -1721,7 +1722,7 @@ private fun TarjetaCentroNotificacionesPush(
                 Icon(
                     imageVector = Icons.Rounded.NotificationsActive,
                     contentDescription = null,
-                    tint = Color(0xFFE65100),
+                    tint = Color(0xFFD97706),
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -1729,7 +1730,7 @@ private fun TarjetaCentroNotificacionesPush(
                     text = "SISTEMA DE NOTIFICACIONES PUSH",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFBF360C),
+                    color = Color(0xFF92400E),
                     letterSpacing = 0.5.sp
                 )
             }
@@ -1751,7 +1752,7 @@ private fun TarjetaCentroNotificacionesPush(
                     .fillMaxWidth()
                     .height(44.dp),
                 shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100)),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
             ) {
                 Icon(

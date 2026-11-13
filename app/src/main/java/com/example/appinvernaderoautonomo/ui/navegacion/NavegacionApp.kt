@@ -1,5 +1,7 @@
 package com.example.appinvernaderoautonomo.ui.navegacion
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -13,6 +15,7 @@ import com.example.appinvernaderoautonomo.data.GreenhouseRepository
 import com.example.appinvernaderoautonomo.iot.GreenhouseIotManager
 import com.example.appinvernaderoautonomo.security.SessionManager
 import com.example.appinvernaderoautonomo.ui.audit.AuditoriaScreen
+import com.example.appinvernaderoautonomo.ui.components.FarmPastelBackground
 import com.example.appinvernaderoautonomo.ui.dashboard.DashboardScreen
 import com.example.appinvernaderoautonomo.ui.history.HistorialScreen
 import com.example.appinvernaderoautonomo.ui.login.LoginScreen
@@ -39,66 +42,73 @@ fun NavegacionApp(
         }
     }
 
-    NavHost(
-        navController = navController,
-        startDestination = "login",
-        modifier = modifier
-    ) {
-        // Pantalla 1: Login Obligatorio con Protección Fail-Safe
-        composable("login") {
-            LoginScreen(
-                repository = repository,
-                onLoginSuccess = { user ->
-                    navController.navigate("dashboard") {
-                        popUpTo("login") { inclusive = true }
-                    }
-                }
-            )
-        }
+    Box(modifier = modifier.fillMaxSize()) {
+        // Fondo vectorial animado de granja, cielo celeste y campo de girasoles
+        FarmPastelBackground(
+            modifier = Modifier.fillMaxSize(),
+            mostrarCapaFrosted = true
+        )
 
-        // Pantalla 2: Dashboard Principal Filtrado por Rol (RBAC)
-        composable("dashboard") {
-            val user = currentUser
-            if (user == null) {
-                // Redirección de seguridad si no hay sesión activa
-                navController.navigate("login") {
-                    popUpTo(0) { inclusive = true }
-                }
-            } else {
-                DashboardScreen(
-                    state = iotState,
-                    currentUser = user,
-                    iotManager = iotManager,
-                    onIrAHistorial = { navController.navigate("historial") },
-                    onIrAAuditoria = { navController.navigate("auditoria") },
-                    onCerrarSesion = {
-                        SessionManager.logout()
-                        navController.navigate("login") {
-                            popUpTo(0) { inclusive = true }
+        NavHost(
+            navController = navController,
+            startDestination = "login",
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Pantalla 1: Login Obligatorio con Protección Fail-Safe
+            composable("login") {
+                LoginScreen(
+                    repository = repository,
+                    onLoginSuccess = { user ->
+                        navController.navigate("dashboard") {
+                            popUpTo("login") { inclusive = true }
                         }
                     }
                 )
             }
-        }
 
-        // Pantalla 3: Historial Cronométrico de Telemetría (Cada 5 min)
-        composable("historial") {
-            HistorialScreen(
-                repository = repository,
-                onVolver = { navController.popBackStack() }
-            )
-        }
+            // Pantalla 2: Dashboard Principal Filtrado por Rol (RBAC)
+            composable("dashboard") {
+                val user = currentUser
+                if (user == null) {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                } else {
+                    DashboardScreen(
+                        state = iotState,
+                        currentUser = user,
+                        iotManager = iotManager,
+                        onIrAHistorial = { navController.navigate("historial") },
+                        onIrAAuditoria = { navController.navigate("auditoria") },
+                        onCerrarSesion = {
+                            SessionManager.logout()
+                            navController.navigate("login") {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    )
+                }
+            }
 
-        // Pantalla 4: Bitácora de Auditoría de Ciberseguridad ISO 27400
-        composable("auditoria") {
-            val user = currentUser
-            if (user == null || !user.role.canViewAuditLogs()) {
-                navController.popBackStack()
-            } else {
-                AuditoriaScreen(
+            // Pantalla 3: Historial Cronométrico de Telemetría (Cada 5 min)
+            composable("historial") {
+                HistorialScreen(
                     repository = repository,
                     onVolver = { navController.popBackStack() }
                 )
+            }
+
+            // Pantalla 4: Bitácora de Auditoría ISO 27400
+            composable("auditoria") {
+                val user = currentUser
+                if (user == null || !user.role.canViewAuditLogs()) {
+                    navController.popBackStack()
+                } else {
+                    AuditoriaScreen(
+                        repository = repository,
+                        onVolver = { navController.popBackStack() }
+                    )
+                }
             }
         }
     }

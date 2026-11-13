@@ -157,17 +157,18 @@ fun AuditoriaScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0277BD),
+                    containerColor = Color(0xFF0284C7),
                     titleContentColor = Color.White
                 )
             )
         },
+        containerColor = Color.Transparent,
         modifier = modifier
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF8FAF9))
+                .background(Color(0x22F8FAF9))
                 .padding(innerPadding)
         ) {
             // Barra horizontal de chips de filtrado

@@ -12,37 +12,45 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = SproutGreen,
-    onPrimary = Color(0xFF003912),
-    primaryContainer = ForestGreenPrimary,
-    onPrimaryContainer = Color(0xFFA6F5B2),
-    secondary = MintAccent,
-    onSecondary = Color(0xFFFFFFFF),
+    primary = PastelGreenLight,
+    onPrimary = PastelGreenDark,
+    primaryContainer = Color(0xFF22442C),
+    onPrimaryContainer = PastelGreenLight,
+    secondary = PastelSkyMedium,
+    onSecondary = PastelSkyDeep,
     background = DarkBackground,
     surface = DarkSurface,
     surfaceVariant = DarkSurfaceCard,
     onBackground = Color(0xFFE2E9E0),
-    onSurface = Color(0xFFE2E9E0)
+    onSurface = Color(0xFFE2E9E0),
+    outline = Color(0xFF354E3E)
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = LeafGreen,
+    primary = PastelGreenPrimary,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFC8E6C9),
-    onPrimaryContainer = Color(0xFF002107),
-    secondary = MintAccent,
+    primaryContainer = PastelGreenLight,
+    onPrimaryContainer = PastelGreenDark,
+    secondary = PastelSkyPrimary,
     onSecondary = Color.White,
-    background = LightBackground,
-    surface = LightSurface,
-    surfaceVariant = LightSurfaceCard,
-    onBackground = Color(0xFF191D19),
-    onSurface = Color(0xFF191D19)
+    secondaryContainer = PastelSkyLight,
+    onSecondaryContainer = PastelSkyDeep,
+    tertiary = PastelSunflower,
+    onTertiary = PastelSunflowerDark,
+    tertiaryContainer = PastelSunflowerLight,
+    onTertiaryContainer = PastelSunflowerDark,
+    background = PastelBackground,
+    surface = PastelSurface,
+    surfaceVariant = PastelGreenSoft,
+    onBackground = PastelTextPrimary,
+    onSurface = PastelTextPrimary,
+    outline = PastelBorder
 )
 
 @Composable
 fun AppInvernaderoAutonomoTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false, // Desactivado para mantener la identidad visual del invernadero
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

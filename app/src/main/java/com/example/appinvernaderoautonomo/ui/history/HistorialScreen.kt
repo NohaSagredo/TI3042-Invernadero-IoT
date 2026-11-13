@@ -112,22 +112,23 @@ fun HistorialScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF1B5E20),
+                    containerColor = Color(0xFF4CAF50),
                     titleContentColor = Color.White
                 )
             )
         },
+        containerColor = Color.Transparent,
         modifier = modifier
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF8FAF9))
+                .background(Color(0x22F8FAF9))
                 .padding(innerPadding)
         ) {
             if (isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Color(0xFF1B5E20))
+                    CircularProgressIndicator(color = Color(0xFF4CAF50))
                 }
             } else if (logs.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
