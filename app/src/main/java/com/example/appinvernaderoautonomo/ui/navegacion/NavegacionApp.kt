@@ -7,6 +7,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -35,12 +36,21 @@ fun NavegacionApp(
     val isSessionExpired by SessionManager.isSessionExpired.collectAsState()
     val iotState by iotManager.state.collectAsState()
 
+    // Función unificada de cierre de sesión seguro: desautentica y limpia la pila de navegación
+    val cerrarSesion: () -> Unit = {
+        SessionManager.logout()
+        navController.navigate("login") {
+            popUpTo(navController.graph.findStartDestination().id) {
+                inclusive = true
+            }
+            launchSingleTop = true
+        }
+    }
+
     // Observador activo de expiración de sesión por inactividad prolongada (15 min)
     androidx.compose.runtime.LaunchedEffect(isSessionExpired) {
         if (isSessionExpired) {
-            navController.navigate("login") {
-                popUpTo(0) { inclusive = true }
-            }
+            cerrarSesion()
         }
     }
 
@@ -71,11 +81,7 @@ fun NavegacionApp(
             // Pantalla 2: Dashboard Principal Filtrado por Rol (RBAC)
             composable("dashboard") {
                 val user = currentUser
-                if (user == null) {
-                    navController.navigate("login") {
-                        popUpTo(0) { inclusive = true }
-                    }
-                } else {
+                if (user != null) {
                     DashboardScreen(
                         state = iotState,
                         currentUser = user,
@@ -84,12 +90,7 @@ fun NavegacionApp(
                         onIrAAuditoria = { navController.navigate("auditoria") },
                         onIrAPerfil = { navController.navigate("perfil") },
                         onIrAConfiguracion = { navController.navigate("configuracion") },
-                        onCerrarSesion = {
-                            SessionManager.logout()
-                            navController.navigate("login") {
-                                popUpTo(0) { inclusive = true }
-                            }
-                        }
+                        onCerrarSesion = cerrarSesion
                     )
                 }
             }
@@ -97,21 +98,12 @@ fun NavegacionApp(
             // Pantalla 3: Perfil del Operador Adaptado
             composable("perfil") {
                 val user = currentUser
-                if (user == null) {
-                    navController.navigate("login") {
-                        popUpTo(0) { inclusive = true }
-                    }
-                } else {
+                if (user != null) {
                     PantallaPerfil(
                         currentUser = user,
                         onIrAConfiguracion = { navController.navigate("configuracion") },
                         onVolver = { navController.popBackStack() },
-                        onCerrarSesion = {
-                            SessionManager.logout()
-                            navController.navigate("login") {
-                                popUpTo(0) { inclusive = true }
-                            }
-                        }
+                        onCerrarSesion = cerrarSesion
                     )
                 }
             }
@@ -119,9 +111,7 @@ fun NavegacionApp(
             // Pantalla 4: Ajustes del Invernadero Adaptados
             composable("configuracion") {
                 val user = currentUser
-                if (user == null || !user.role.canModifySettings()) {
-                    navController.popBackStack()
-                } else {
+                if (user != null && user.role.canModifySettings()) {
                     PantallaConfiguracion(
                         onVolverAlPerfil = { navController.popBackStack() }
                     )
@@ -139,9 +129,7 @@ fun NavegacionApp(
             // Pantalla 6: Bitácora de Auditoría
             composable("auditoria") {
                 val user = currentUser
-                if (user == null || !user.role.canViewAuditLogs()) {
-                    navController.popBackStack()
-                } else {
+                if (user != null && user.role.canViewAuditLogs()) {
                     AuditoriaScreen(
                         repository = repository,
                         onVolver = { navController.popBackStack() }
